@@ -1,5 +1,15 @@
 import { useState, useEffect, useRef } from "react";
 
+function useWindowSize() {
+  const [w, setW] = useState(typeof window !== "undefined" ? window.innerWidth : 480);
+  useEffect(() => {
+    const handler = () => setW(window.innerWidth);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
+  return w;
+}
+
 // ─── DATA ────────────────────────────────────────────────────────────────────
 
 const INSTITUTIONS = [
@@ -185,89 +195,101 @@ function Card({ children, style = {} }) {
 
 // ─── SCREENS ─────────────────────────────────────────────────────────────────
 
-function HomeScreen({ setScreen }) {
+function HomeScreen({ setScreen, w = 480 }) {
+  const isDesktop = w >= 1024;
+  const isTablet = w >= 640;
+  const px = isDesktop ? 32 : 16;
   const totalMajors = INSTITUTIONS.reduce((a, i) => a + i.colleges.reduce((b, c) => b + c.majors.length, 0), 0);
   return (
     <div>
       {/* Hero */}
-      <div style={{ background: `linear-gradient(160deg, ${COLORS.navy} 0%, #2a5298 100%)`, padding: "24px 16px 32px", borderRadius: "0 0 24px 24px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 36, height: 36, background: COLORS.gold, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, color: COLORS.navy, fontSize: 16 }}>خ</div>
-            <span style={{ color: "white", fontSize: 18, fontWeight: 600 }}>خريّج</span>
+      <div style={{ background: `linear-gradient(160deg, ${COLORS.navy} 0%, #2a5298 100%)`, padding: `${isDesktop ? 32 : 24}px ${px}px ${isDesktop ? 40 : 32}px`, borderRadius: isDesktop ? "0 0 0 0" : "0 0 24px 24px" }}>
+        {!isDesktop && (
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ width: 36, height: 36, background: COLORS.gold, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, color: COLORS.navy, fontSize: 16 }}>خ</div>
+              <span style={{ color: "white", fontSize: 18, fontWeight: 600 }}>خريّج</span>
+            </div>
+            <div style={{ width: 34, height: 34, background: "rgba(255,255,255,.15)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>🔔</div>
           </div>
-          <div style={{ width: 34, height: 34, background: "rgba(255,255,255,.15)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>🔔</div>
-        </div>
-        <div style={{ color: "rgba(255,255,255,.75)", fontSize: 13, marginBottom: 4 }}>أهلاً بك في خريّج</div>
-        <div style={{ color: "white", fontSize: 20, fontWeight: 600, marginBottom: 20 }}>دليلك لمرحلة ما بعد الثانوية 🎓</div>
-        {/* Stats row */}
+        )}
+        <div style={{ color: "rgba(255,255,255,.75)", fontSize: isDesktop ? 14 : 13, marginBottom: 4 }}>أهلاً بك في خريّج</div>
+        <div style={{ color: "white", fontSize: isDesktop ? 26 : 20, fontWeight: 700, marginBottom: 20 }}>دليلك لمرحلة ما بعد الثانوية 🎓</div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10 }}>
           {[["8", "مؤسسة"], [`${totalMajors}+`, "تخصص"], ["6", "بعثات"]].map(([n, l]) => (
-            <div key={l} style={{ background: "rgba(255,255,255,.12)", borderRadius: 10, padding: "10px 0", textAlign: "center" }}>
-              <div style={{ color: COLORS.gold, fontSize: 20, fontWeight: 700 }}>{n}</div>
-              <div style={{ color: "rgba(255,255,255,.75)", fontSize: 11 }}>{l}</div>
+            <div key={l} style={{ background: "rgba(255,255,255,.12)", borderRadius: 10, padding: "12px 0", textAlign: "center" }}>
+              <div style={{ color: COLORS.gold, fontSize: isDesktop ? 24 : 20, fontWeight: 700 }}>{n}</div>
+              <div style={{ color: "rgba(255,255,255,.75)", fontSize: 12 }}>{l}</div>
             </div>
           ))}
         </div>
       </div>
 
-      <div style={{ padding: "16px 16px 80px" }}>
+      <div style={{ padding: `16px ${px}px ${isDesktop ? 40 : 80}px` }}>
         {/* Quick actions */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, marginBottom: 24 }}>
+        <div style={{ display: "grid", gridTemplateColumns: `repeat(${isDesktop ? 4 : 4},1fr)`, gap: isDesktop ? 14 : 10, marginBottom: 28 }}>
           {[
             { icon: "🎓", label: "التخصصات", screen: "majors" },
             { icon: "📅", label: "المواعيد", screen: "dates" },
             { icon: "✈️", label: "البعثات", screen: "scholarships" },
             { icon: "🧠", label: "اختبار الميول", screen: "aptitude" },
           ].map(q => (
-            <button key={q.screen} onClick={() => setScreen(q.screen)} style={{ background: "white", border: "1px solid #e5e7eb", borderRadius: 12, padding: "12px 6px", display: "flex", flexDirection: "column", alignItems: "center", gap: 6, cursor: "pointer", fontFamily: "inherit" }}>
-              <span style={{ fontSize: 24 }}>{q.icon}</span>
-              <span style={{ fontSize: 10, color: COLORS.gray, textAlign: "center" }}>{q.label}</span>
+            <button key={q.screen} onClick={() => setScreen(q.screen)} style={{ background: "white", border: "1px solid #e5e7eb", borderRadius: 14, padding: isDesktop ? "18px 8px" : "12px 6px", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, cursor: "pointer", fontFamily: "inherit", transition: "box-shadow .15s" }}>
+              <span style={{ fontSize: isDesktop ? 28 : 24 }}>{q.icon}</span>
+              <span style={{ fontSize: isDesktop ? 12 : 10, color: COLORS.gray, textAlign: "center" }}>{q.label}</span>
             </button>
           ))}
         </div>
 
-        {/* Upcoming dates */}
-        <div style={{ marginBottom: 24 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <span style={{ fontSize: 15, fontWeight: 600, color: "#111" }}>مواعيد مهمة قادمة</span>
-            <button onClick={() => setScreen("dates")} style={{ fontSize: 12, color: COLORS.navy, background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}>عرض الكل</button>
+        {/* Bottom section — 2-col on desktop */}
+        <div style={{ display: "grid", gridTemplateColumns: isDesktop ? "1fr 1fr" : "1fr", gap: isDesktop ? 24 : 0 }}>
+          {/* Upcoming dates */}
+          <div style={{ marginBottom: isDesktop ? 0 : 24 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+              <span style={{ fontSize: 15, fontWeight: 600, color: "#111" }}>مواعيد مهمة قادمة</span>
+              <button onClick={() => setScreen("dates")} style={{ fontSize: 12, color: COLORS.navy, background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}>عرض الكل</button>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {DATES.slice(0, isDesktop ? 4 : 3).map(d => {
+                const uc = { high: "red", med: "orange", low: "navy", info: "gray" };
+                const lbl = { high: "عاجل", med: "قريب", low: "قادم", info: "مفتوح" };
+                return (
+                  <Card key={d.id} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <div style={{ fontSize: 22 }}>{d.icon}</div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 500, color: "#111" }}>{d.title}</div>
+                      <div style={{ fontSize: 11, color: COLORS.gray, marginTop: 2 }}>{d.date}</div>
+                    </div>
+                    <Badge color={uc[d.urgency]}>{lbl[d.urgency]}</Badge>
+                  </Card>
+                );
+              })}
+            </div>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-            {DATES.slice(0, 3).map(d => {
-              const uc = { high: "red", med: "orange", low: "navy", info: "gray" };
-              const lbl = { high: "عاجل", med: "قريب", low: "قادم", info: "مفتوح" };
-              return (
-                <Card key={d.id} style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <div style={{ fontSize: 22 }}>{d.icon}</div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 13, fontWeight: 500, color: "#111" }}>{d.title}</div>
-                    <div style={{ fontSize: 11, color: COLORS.gray, marginTop: 2 }}>{d.date}</div>
-                  </div>
-                  <Badge color={uc[d.urgency]}>{lbl[d.urgency]}</Badge>
-                </Card>
-              );
-            })}
+
+          {/* Aptitude CTA */}
+          <div>
+            <div style={{ fontSize: 15, fontWeight: 600, color: "#111", marginBottom: 12 }}>اكتشف ميولك</div>
+            <Card style={{ background: `linear-gradient(135deg, ${COLORS.purpleLight}, #f3f0ff)`, border: `1px solid #d4c8f8`, cursor: "pointer" }}>
+              <div onClick={() => setScreen("aptitude")} style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                <div style={{ fontSize: isDesktop ? 44 : 36 }}>🧠</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: COLORS.purple }}>اكتشف تخصصك المناسب</div>
+                  <div style={{ fontSize: 12, color: COLORS.gray, marginTop: 4 }}>اختبار RIASEC · 20 سؤال</div>
+                </div>
+                <span style={{ color: COLORS.purple, fontSize: 18 }}>←</span>
+              </div>
+            </Card>
           </div>
         </div>
-
-        {/* Aptitude CTA */}
-        <Card style={{ background: `linear-gradient(135deg, ${COLORS.purpleLight}, #f3f0ff)`, border: `1px solid #d4c8f8`, cursor: "pointer" }} >
-          <div onClick={() => setScreen("aptitude")} style={{ display: "flex", gap: 12, alignItems: "center" }}>
-            <div style={{ fontSize: 36 }}>🧠</div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 14, fontWeight: 600, color: COLORS.purple }}>اكتشف تخصصك المناسب</div>
-              <div style={{ fontSize: 12, color: COLORS.gray, marginTop: 4 }}>اختبار 20 سؤال لتحديد ميولك العلمية</div>
-            </div>
-            <span style={{ color: COLORS.purple, fontSize: 18 }}>←</span>
-          </div>
-        </Card>
       </div>
     </div>
   );
 }
 
-function MajorsScreen() {
+function MajorsScreen({ w = 480 }) {
+  const isDesktop = w >= 1024;
+  const px = isDesktop ? 32 : 16;
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState("all");
   const [openInst, setOpenInst] = useState({});
@@ -300,9 +322,9 @@ function MajorsScreen() {
   const totalMaj = filteredInst.reduce((a, i) => a + i.colleges.reduce((b, c) => b + c.majors.length, 0), 0);
 
   return (
-    <div style={{ padding: "16px 16px 80px" }}>
+    <div style={{ padding: `16px ${px}px ${isDesktop ? 40 : 80}px` }}>
       <div style={{ fontSize: 18, fontWeight: 700, color: "#111", marginBottom: 12 }}>استعرض التخصصات</div>
-      <input value={q} onChange={e => setQ(e.target.value)} placeholder="ابحث عن تخصص أو كلية..." style={{ width: "100%", padding: "10px 14px", border: "1px solid #e5e7eb", borderRadius: 10, fontSize: 14, marginBottom: 12, fontFamily: "inherit", background: "white", color: "#111", direction: "rtl" }} />
+      <input value={q} onChange={e => setQ(e.target.value)} placeholder="ابحث عن تخصص أو كلية..." style={{ width: "100%", padding: "10px 14px", border: "1px solid #e5e7eb", borderRadius: 10, fontSize: 14, marginBottom: 12, fontFamily: "inherit", background: "white", color: "#111", direction: "rtl", boxSizing: "border-box" }} />
       <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 14 }}>
         {filters.map(f => <Pill key={f.id} active={filter === f.id} onClick={() => setFilter(f.id)}>{f.label}</Pill>)}
       </div>
@@ -390,39 +412,62 @@ function MajorsScreen() {
   );
 }
 
-function DatesScreen() {
+function DatesScreen({ w = 480 }) {
+  const isDesktop = w >= 1024;
+  const px = isDesktop ? 32 : 16;
   return (
-    <div style={{ padding: "16px 16px 80px" }}>
+    <div style={{ padding: `16px ${px}px ${isDesktop ? 40 : 80}px` }}>
       <div style={{ fontSize: 18, fontWeight: 700, color: "#111", marginBottom: 4 }}>المواعيد المهمة</div>
       <div style={{ fontSize: 13, color: COLORS.gray, marginBottom: 16 }}>تواريخ مهمة لخريجي الثانوية 2025</div>
 
-      {/* Timeline */}
-      <div style={{ position: "relative" }}>
-        <div style={{ position: "absolute", right: 19, top: 0, bottom: 0, width: 2, background: "#e5e7eb" }} />
-        {DATES.map((d, i) => {
-          const uc = { high: [COLORS.redLight, COLORS.red, "عاجل"], med: [COLORS.orangeLight, COLORS.orange, "قريب"], low: [COLORS.navyLight, COLORS.navy, "قادم"], info: [COLORS.grayLight, COLORS.gray, "مستمر"] };
-          const [bg, fg, lbl] = uc[d.urgency];
-          return (
-            <div key={d.id} style={{ display: "flex", gap: 14, alignItems: "flex-start", marginBottom: 16, position: "relative" }}>
-              <div style={{ width: 40, height: 40, background: bg, border: `2px solid ${fg}`, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0, zIndex: 1 }}>{d.icon}</div>
-              <Card style={{ flex: 1 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: "#111" }}>{d.title}</div>
+      {isDesktop ? (
+        /* Desktop: 2-column grid */
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 14 }}>
+          {DATES.map(d => {
+            const uc = { high: [COLORS.redLight, COLORS.red, "عاجل"], med: [COLORS.orangeLight, COLORS.orange, "قريب"], low: [COLORS.navyLight, COLORS.navy, "قادم"], info: [COLORS.grayLight, COLORS.gray, "مستمر"] };
+            const [bg, fg, lbl] = uc[d.urgency];
+            return (
+              <Card key={d.id}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
+                  <div style={{ width: 44, height: 44, background: bg, border: `2px solid ${fg}`, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>{d.icon}</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: "#111" }}>{d.title}</div>
+                    <div style={{ fontSize: 12, color: COLORS.gray, marginTop: 2 }}>{d.subtitle}</div>
+                  </div>
                   <Badge color={{ high: "red", med: "orange", low: "navy", info: "gray" }[d.urgency]}>{lbl}</Badge>
                 </div>
-                <div style={{ fontSize: 12, color: COLORS.gray }}>{d.subtitle}</div>
-                <div style={{ marginTop: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontSize: 13, fontWeight: 500, color: fg }}>📅 {d.date}</span>
-                </div>
-                <div style={{ marginTop: 6, fontSize: 11, color: COLORS.gray, background: "#f9fafb", padding: "4px 8px", borderRadius: 6 }}>ℹ️ {d.reg}</div>
+                <div style={{ fontSize: 13, fontWeight: 500, color: fg, marginBottom: 6 }}>📅 {d.date}</div>
+                <div style={{ fontSize: 11, color: COLORS.gray, background: "#f9fafb", padding: "4px 8px", borderRadius: 6 }}>ℹ️ {d.reg}</div>
               </Card>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      ) : (
+        /* Mobile: timeline */
+        <div style={{ position: "relative" }}>
+          <div style={{ position: "absolute", right: 19, top: 0, bottom: 0, width: 2, background: "#e5e7eb" }} />
+          {DATES.map(d => {
+            const uc = { high: [COLORS.redLight, COLORS.red, "عاجل"], med: [COLORS.orangeLight, COLORS.orange, "قريب"], low: [COLORS.navyLight, COLORS.navy, "قادم"], info: [COLORS.grayLight, COLORS.gray, "مستمر"] };
+            const [bg, fg, lbl] = uc[d.urgency];
+            return (
+              <div key={d.id} style={{ display: "flex", gap: 14, alignItems: "flex-start", marginBottom: 16, position: "relative" }}>
+                <div style={{ width: 40, height: 40, background: bg, border: `2px solid ${fg}`, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0, zIndex: 1 }}>{d.icon}</div>
+                <Card style={{ flex: 1 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: "#111" }}>{d.title}</div>
+                    <Badge color={{ high: "red", med: "orange", low: "navy", info: "gray" }[d.urgency]}>{lbl}</Badge>
+                  </div>
+                  <div style={{ fontSize: 12, color: COLORS.gray }}>{d.subtitle}</div>
+                  <div style={{ marginTop: 8 }}><span style={{ fontSize: 13, fontWeight: 500, color: fg }}>📅 {d.date}</span></div>
+                  <div style={{ marginTop: 6, fontSize: 11, color: COLORS.gray, background: "#f9fafb", padding: "4px 8px", borderRadius: 6 }}>ℹ️ {d.reg}</div>
+                </Card>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
-      {/* Note */}
-      <Card style={{ background: COLORS.navyLight, border: `1px solid ${COLORS.navy}30`, marginTop: 8 }}>
+      <Card style={{ background: COLORS.navyLight, border: `1px solid ${COLORS.navy}30`, marginTop: 16 }}>
         <div style={{ fontSize: 12, color: COLORS.navy, lineHeight: 1.7 }}>
           <strong>ملاحظة:</strong> المواعيد المذكورة تقريبية استناداً للجداول السابقة. تأكد دائماً من المواقع الرسمية للجامعات والهيئات للحصول على التواريخ الدقيقة.
         </div>
@@ -431,10 +476,12 @@ function DatesScreen() {
   );
 }
 
-function ScholarshipsScreen() {
+function ScholarshipsScreen({ w = 480 }) {
+  const isDesktop = w >= 1024;
+  const px = isDesktop ? 32 : 16;
   const [selected, setSelected] = useState(null);
   return (
-    <div style={{ padding: "16px 16px 80px" }}>
+    <div style={{ padding: `16px ${px}px ${isDesktop ? 40 : 80}px` }}>
       <div style={{ fontSize: 18, fontWeight: 700, color: "#111", marginBottom: 4 }}>بعثات التعليم العالي</div>
       <div style={{ fontSize: 13, color: COLORS.gray, marginBottom: 16 }}>البعثات التابعة لوزارة التعليم العالي - الكويت</div>
 
@@ -449,7 +496,7 @@ function ScholarshipsScreen() {
         </div>
       </Card>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <div style={{ display: "grid", gridTemplateColumns: isDesktop ? "repeat(2,1fr)" : "1fr", gap: 10 }}>
         {SCHOLARSHIPS.map(s => {
           const statusMap = { open: ["#e2f5ed", COLORS.green, "التقديم مفتوح"], study: ["#f0f0f0", COLORS.gray, "قيد الدراسة"], upcoming: [COLORS.orangeLight, COLORS.orange, "قادماً"] };
           const [sbg, sfg, slbl] = statusMap[s.status];
@@ -486,7 +533,9 @@ function ScholarshipsScreen() {
   );
 }
 
-function AptitudeScreen() {
+function AptitudeScreen({ w = 480 }) {
+  const isDesktop = w >= 1024;
+  const px = isDesktop ? 32 : 16;
   const [step, setStep] = useState("intro"); // intro | quiz | result
   const [answers, setAnswers] = useState({});
   const [current, setCurrent] = useState(0);
@@ -513,7 +562,7 @@ function AptitudeScreen() {
   const reset = () => { setStep("intro"); setAnswers({}); setCurrent(0); setResult(null); };
 
   if (step === "intro") return (
-    <div style={{ padding: "16px 16px 80px" }}>
+    <div style={{ padding: `16px ${px}px ${isDesktop ? 40 : 80}px` }}>
       <div style={{ fontSize: 18, fontWeight: 700, color: "#111", marginBottom: 4 }}>اختبار تحديد الميول</div>
       <div style={{ fontSize: 13, color: COLORS.gray, marginBottom: 20 }}>اكتشف التخصص الذي يناسب شخصيتك وميولك</div>
       <div style={{ textAlign: "center", padding: "40px 20px", background: "white", borderRadius: 16, border: "1px solid #e5e7eb", marginBottom: 20 }}>
@@ -546,7 +595,7 @@ function AptitudeScreen() {
     const q = APTITUDE_QUESTIONS[current];
     const pct = Math.round((current / APTITUDE_QUESTIONS.length) * 100);
     return (
-      <div style={{ padding: "16px 16px 80px" }}>
+      <div style={{ padding: `16px ${px}px ${isDesktop ? 40 : 80}px` }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div style={{ fontSize: 14, fontWeight: 600, color: "#111" }}>سؤال {current + 1} من {APTITUDE_QUESTIONS.length}</div>
           <button onClick={reset} style={{ fontSize: 12, color: COLORS.gray, background: "none", border: "none", cursor: "pointer", fontFamily: "inherit" }}>إلغاء</button>
@@ -578,7 +627,7 @@ function AptitudeScreen() {
   }
 
   if (step === "result" && result) return (
-    <div style={{ padding: "16px 16px 80px" }}>
+    <div style={{ padding: `16px ${px}px ${isDesktop ? 40 : 80}px` }}>
       <div style={{ textAlign: "center", padding: "32px 20px", background: `linear-gradient(135deg, ${COLORS.navy}, #2a5298)`, borderRadius: 16, marginBottom: 16, color: "white" }}>
         <div style={{ fontSize: 56, marginBottom: 12 }}>{result.emoji}</div>
         {/* Holland Code badge */}
@@ -618,6 +667,9 @@ function AptitudeScreen() {
 
 export default function App() {
   const [screen, setScreen] = useState("home");
+  const w = useWindowSize();
+  const isDesktop = w >= 1024;
+  const isTablet = w >= 640;
 
   const tabs = [
     { id: "home", label: "الرئيسية", icon: "🏠" },
@@ -631,29 +683,66 @@ export default function App() {
   const ActiveScreen = screens[screen] || HomeScreen;
 
   return (
-    <div style={{ maxWidth: 480, margin: "0 auto", background: "#f8f9fa", minHeight: "100vh", position: "relative", fontFamily: "system-ui, -apple-system, sans-serif", direction: "rtl" }}>
-      {/* Screen header */}
-      {screen !== "home" && (
-        <div style={{ background: COLORS.navy, padding: "14px 16px", display: "flex", alignItems: "center", gap: 10, position: "sticky", top: 0, zIndex: 10 }}>
-          <button onClick={() => setScreen("home")} style={{ background: "rgba(255,255,255,.15)", border: "none", borderRadius: "50%", width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "white", fontSize: 16 }}>←</button>
-          <div style={{ width: 28, height: 28, background: COLORS.gold, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, color: COLORS.navy, fontSize: 12 }}>خ</div>
-          <span style={{ color: "white", fontWeight: 600, fontSize: 15 }}>{tabs.find(t => t.id === screen)?.label}</span>
-        </div>
+    <div style={{ fontFamily: "system-ui, -apple-system, sans-serif", direction: "rtl", minHeight: "100vh", display: "flex", background: "#f8f9fa" }}>
+
+      {/* ── Desktop sidebar ── */}
+      {isDesktop && (
+        <aside style={{ width: 220, flexShrink: 0, background: COLORS.navy, minHeight: "100vh", position: "sticky", top: 0, height: "100vh", display: "flex", flexDirection: "column", overflowY: "auto" }}>
+          <div style={{ padding: "28px 20px 20px", borderBottom: "1px solid rgba(255,255,255,.1)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ width: 40, height: 40, background: COLORS.gold, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, color: COLORS.navy, fontSize: 18 }}>خ</div>
+              <span style={{ color: "white", fontSize: 20, fontWeight: 700 }}>خريّج</span>
+            </div>
+            <div style={{ color: "rgba(255,255,255,.4)", fontSize: 11, marginTop: 8 }}>دليل ما بعد الثانوية</div>
+          </div>
+          <nav style={{ padding: "12px 0", flex: 1 }}>
+            {tabs.map(t => (
+              <button key={t.id} onClick={() => setScreen(t.id)} style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "13px 20px", border: "none", background: screen === t.id ? "rgba(255,255,255,.12)" : "none", cursor: "pointer", fontFamily: "inherit", borderRight: screen === t.id ? `3px solid ${COLORS.gold}` : "3px solid transparent", transition: "background .15s" }}>
+                <span style={{ fontSize: 20 }}>{t.icon}</span>
+                <span style={{ color: screen === t.id ? "white" : "rgba(255,255,255,.6)", fontSize: 14, fontWeight: screen === t.id ? 600 : 400 }}>{t.label}</span>
+              </button>
+            ))}
+          </nav>
+        </aside>
       )}
 
-      <div style={{ paddingBottom: 64 }}>
-        <ActiveScreen setScreen={setScreen} />
-      </div>
+      {/* ── Main area ── */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
 
-      {/* Bottom nav */}
-      <div style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: 480, background: "white", borderTop: "1px solid #e5e7eb", display: "flex", zIndex: 100 }}>
-        {tabs.map(t => (
-          <button key={t.id} onClick={() => setScreen(t.id)} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "8px 4px 10px", border: "none", background: "none", cursor: "pointer", fontFamily: "inherit" }}>
-            <span style={{ fontSize: 18 }}>{t.icon}</span>
-            <span style={{ fontSize: 9, color: screen === t.id ? COLORS.navy : COLORS.gray, fontWeight: screen === t.id ? 600 : 400 }}>{t.label}</span>
-            {screen === t.id && <div style={{ width: 20, height: 2, background: COLORS.navy, borderRadius: 2, marginTop: 1 }} />}
-          </button>
-        ))}
+        {/* Mobile/tablet sticky header */}
+        {!isDesktop && screen !== "home" && (
+          <div style={{ background: COLORS.navy, padding: "14px 16px", display: "flex", alignItems: "center", gap: 10, position: "sticky", top: 0, zIndex: 10 }}>
+            <button onClick={() => setScreen("home")} style={{ background: "rgba(255,255,255,.15)", border: "none", borderRadius: "50%", width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "white", fontSize: 16 }}>←</button>
+            <div style={{ width: 28, height: 28, background: COLORS.gold, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, color: COLORS.navy, fontSize: 12 }}>خ</div>
+            <span style={{ color: "white", fontWeight: 600, fontSize: 15 }}>{tabs.find(t => t.id === screen)?.label}</span>
+          </div>
+        )}
+
+        {/* Desktop page title bar (non-home) */}
+        {isDesktop && screen !== "home" && (
+          <div style={{ background: "white", borderBottom: "1px solid #e5e7eb", padding: "14px 32px", display: "flex", alignItems: "center", gap: 12, position: "sticky", top: 0, zIndex: 10 }}>
+            <button onClick={() => setScreen("home")} style={{ background: COLORS.navyLight, border: "none", borderRadius: 8, padding: "6px 12px", cursor: "pointer", color: COLORS.navy, fontSize: 13, fontFamily: "inherit" }}>← رئيسية</button>
+            <span style={{ fontSize: 18, fontWeight: 700, color: "#111" }}>{tabs.find(t => t.id === screen)?.label}</span>
+          </div>
+        )}
+
+        {/* Screen content — centered & max-width capped on mobile/tablet */}
+        <div style={{ flex: 1, width: "100%", maxWidth: isDesktop ? "none" : isTablet ? 600 : 480, margin: isDesktop ? 0 : "0 auto", paddingBottom: isDesktop ? 0 : 64 }}>
+          <ActiveScreen setScreen={setScreen} w={w} />
+        </div>
+
+        {/* Mobile / tablet bottom nav */}
+        {!isDesktop && (
+          <div style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: isTablet ? 600 : 480, background: "white", borderTop: "1px solid #e5e7eb", display: "flex", zIndex: 100 }}>
+            {tabs.map(t => (
+              <button key={t.id} onClick={() => setScreen(t.id)} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "8px 4px 10px", border: "none", background: "none", cursor: "pointer", fontFamily: "inherit" }}>
+                <span style={{ fontSize: 18 }}>{t.icon}</span>
+                <span style={{ fontSize: 9, color: screen === t.id ? COLORS.navy : COLORS.gray, fontWeight: screen === t.id ? 600 : 400 }}>{t.label}</span>
+                {screen === t.id && <div style={{ width: 20, height: 2, background: COLORS.navy, borderRadius: 2, marginTop: 1 }} />}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
