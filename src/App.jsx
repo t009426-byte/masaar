@@ -117,37 +117,43 @@ const SCHOLARSHIPS = [
 ];
 
 const APTITUDE_QUESTIONS = [
-  { id: 1, text: "أستمتع بحل المسائل الرياضية والمنطقية", cat: "sci" },
-  { id: 2, text: "أحب القراءة والكتابة والتعبير عن أفكاري", cat: "arts" },
-  { id: 3, text: "أجد نفسي مرتاحاً في المختبرات والتجارب العلمية", cat: "sci" },
-  { id: 4, text: "أهتم بأحوال المجتمع وقضاياه", cat: "social" },
-  { id: 5, text: "أميل للعمل مع الأرقام والبيانات المالية", cat: "biz" },
-  { id: 6, text: "أحلم ببناء أشياء أو تصميم هياكل", cat: "eng" },
-  { id: 7, text: "أستمتع برعاية الناس ومساعدتهم في صحتهم", cat: "med" },
-  { id: 8, text: "أهتم بالقانون والحقوق والعدالة", cat: "law" },
-  { id: 9, text: "أجيد التواصل والإقناع والتفاوض", cat: "biz" },
-  { id: 10, text: "أحب البرمجة والتقنية والحاسوب", cat: "tech" },
-  { id: 11, text: "أستمتع برسم الأشياء وتصميم الفضاءات", cat: "arts" },
-  { id: 12, text: "أعتقد أن التدريس والتربية مهنة نبيلة", cat: "social" },
-  { id: 13, text: "أميل للبحث العلمي والاكتشاف", cat: "sci" },
-  { id: 14, text: "أهتم بسوق الأعمال وإنشاء المشاريع", cat: "biz" },
-  { id: 15, text: "أجد الهندسة والتصنيع مجالاً مثيراً", cat: "eng" },
-  { id: 16, text: "أستمتع بدراسة التاريخ والثقافات المختلفة", cat: "arts" },
-  { id: 17, text: "أميل للعمل في المستشفيات والبيئة الطبية", cat: "med" },
-  { id: 18, text: "أحب حل المشكلات التقنية في الأجهزة والأنظمة", cat: "tech" },
-  { id: 19, text: "أهتم بالبيئة والموارد الطبيعية", cat: "sci" },
-  { id: 20, text: "أجد نفسي قائداً في المجموعات", cat: "biz" },
+  // R – Realistic
+  { id: 1,  text: "أحب إصلاح الأجهزة والعمل بالأدوات والمعدات", cat: "R" },
+  { id: 2,  text: "أستمتع بالأعمال اليدوية والمشاريع التقنية العملية", cat: "R" },
+  { id: 3,  text: "أفضّل العمل في بيئات هندسية أو مختبرية عملية", cat: "R" },
+  { id: 4,  text: "أجد متعة في بناء الأشياء وتجميع المعدات", cat: "R" },
+  // I – Investigative
+  { id: 5,  text: "أحب التحليل والبحث في أسباب الظواهر وتفسيرها", cat: "I" },
+  { id: 6,  text: "أستمتع بحل المسائل الرياضية والعلمية المعقدة", cat: "I" },
+  { id: 7,  text: "أشعر بالفضول تجاه اكتشاف كيف تعمل الأشياء", cat: "I" },
+  { id: 8,  text: "أقضي وقتاً في قراءة الكتب والمقالات العلمية", cat: "I" },
+  // A – Artistic
+  { id: 9,  text: "أعبّر عن نفسي من خلال الفن أو الكتابة أو التصميم", cat: "A" },
+  { id: 10, text: "أستمتع بابتكار أفكار وأشياء جديدة وغير مألوفة", cat: "A" },
+  { id: 11, text: "أفضّل العمل في بيئة مرنة تتيح الإبداع بدلاً من الروتين", cat: "A" },
+  // S – Social
+  { id: 12, text: "أجد معنى حقيقياً في مساعدة الآخرين ودعمهم", cat: "S" },
+  { id: 13, text: "أستمتع بالتعليم والتدريب وتوجيه الآخرين", cat: "S" },
+  { id: 14, text: "أهتم برفاهية المجتمع وأشارك في الأعمال التطوعية", cat: "S" },
+  // E – Enterprising
+  { id: 15, text: "أحب قيادة الفرق والتأثير في قرارات الآخرين", cat: "E" },
+  { id: 16, text: "أستمتع بالتفاوض وإقناع الآخرين بأفكاري", cat: "E" },
+  { id: 17, text: "أطمح لإدارة مشاريع وتحقيق أهداف تجارية وريادية", cat: "E" },
+  // C – Conventional
+  { id: 18, text: "أفضّل العمل وفق أنظمة وإجراءات محددة وواضحة", cat: "C" },
+  { id: 19, text: "أستمتع بتنظيم البيانات والسجلات والملفات بدقة", cat: "C" },
+  { id: 20, text: "أجيد العمل الدقيق المنظم الذي يتطلب الانتباه للتفاصيل", cat: "C" },
 ];
 
+const RIASEC_LABELS = { R: "Realistic", I: "Investigative", A: "Artistic", S: "Social", E: "Enterprising", C: "Conventional" };
+
 const APTITUDE_RESULTS = {
-  sci:    { title: "العلوم البحتة والطبيعية", emoji: "🔬", desc: "ميولك تتجه نحو العلوم والبحث العلمي. مجالات الفيزياء والكيمياء وعلوم الأحياء والرياضيات تناسبك.", recs: ["كلية العلوم - جامعة الكويت", "كلية العلوم الحياتية - جامعة الكويت", "كلية الدراسات التكنولوجية - PAAET"] },
-  med:    { title: "الطب والعلوم الصحية", emoji: "🏥", desc: "لديك ميل قوي لمجالات الطب ورعاية المرضى والعلوم الصحية. هذا المجال يحتاج تضحية وصبراً.", recs: ["كلية الطب - جامعة الكويت", "كلية طب الأسنان - جامعة الكويت", "كلية الصيدلة - جامعة الكويت", "كلية العلوم الصحية - PAAET"] },
-  eng:    { title: "الهندسة والتصميم", emoji: "⚙️", desc: "تميل نحو الهندسة والتصميم وبناء الأنظمة. المشاريع العملية والتقنية هي بيئتك المثالية.", recs: ["كلية الهندسة والبترول - جامعة الكويت", "كلية الهندسة - AUK", "كلية الهندسة والتكنولوجيا - AUM", "كلية الدراسات التكنولوجية - PAAET"] },
-  tech:   { title: "تقنية المعلومات والبرمجة", emoji: "💻", desc: "ميولك واضحة نحو عالم التقنية والبرمجة وحل المشكلات الرقمية. مستقبل واعد ينتظرك.", recs: ["علم الحاسوب - كلية العلوم KU", "كلية نظم المعلومات - GUST", "كلية تقنية المعلومات - AUM", "كلية الدراسات التكنولوجية - PAAET"] },
-  biz:    { title: "الأعمال والإدارة", emoji: "📊", desc: "لديك حس تجاري وقيادي. مجالات الإدارة والتمويل والتسويق وريادة الأعمال مناسبة لك.", recs: ["كلية العلوم الإدارية - جامعة الكويت", "كلية الأعمال - AUK", "كلية الأعمال - GUST", "كلية الدراسات التجارية - PAAET"] },
-  law:    { title: "القانون والعدالة", emoji: "⚖️", desc: "ميولك نحو العدالة والقانون والحقوق. مجال يحتاج دقة في التفكير وقوة في الحجة.", recs: ["كلية الحقوق - جامعة الكويت", "كلية الشريعة والدراسات الإسلامية - KU", "KILAW - كلية القانون الكويتية العالمية"] },
-  arts:   { title: "الآداب والفنون والإعلام", emoji: "🎨", desc: "تميل نحو التعبير الإبداعي والثقافة واللغات والتصميم. مجال يجمع الجمال بالمعنى.", recs: ["كلية الآداب - جامعة الكويت", "كلية العمارة - جامعة الكويت", "كلية الفنون والعلوم الإنسانية - AUK"] },
-  social: { title: "العلوم الاجتماعية والتربية", emoji: "🤝", desc: "اهتمامك الكبير بالناس والمجتمع يجعلك مناسباً لمجالات التربية والخدمة الاجتماعية وعلم النفس.", recs: ["كلية العلوم الاجتماعية - جامعة الكويت", "كلية التربية - جامعة الكويت", "كلية التربية الأساسية - PAAET"] },
+  R: { code: "R", title: "العملي التقني", emoji: "🔧", desc: "تميل نحو الأعمال العملية والتقنية. تفضل العمل بيديك وتجد متعة في حل المشكلات الهندسية والتقنية الملموسة. البيئة المثالية لك هي الورش والمختبرات والمواقع الهندسية.", recs: ["كلية الهندسة والبترول - جامعة الكويت", "كلية الدراسات التكنولوجية - PAAET", "كلية الهندسة والتكنولوجيا - AUM", "كلية الهندسة والتكنولوجيا - ACK"] },
+  I: { code: "I", title: "الباحث المحلل", emoji: "🔬", desc: "تتميز بالتفكير التحليلي والفضول العلمي. تحب البحث والتجريب وتسعى دائماً لفهم الأشياء بعمق. تنجذب للمسائل المعقدة التي تحتاج تفكيراً نقدياً.", recs: ["كلية العلوم - جامعة الكويت", "كلية الطب - جامعة الكويت", "كلية الصيدلة - جامعة الكويت", "كلية العلوم الحياتية - KU"] },
+  A: { code: "A", title: "المبدع الفني", emoji: "🎨", desc: "تمتلك روحاً إبداعية وتعبيرية. تنجذب نحو الفن والتصميم والأدب والإعلام. تزدهر في البيئات المرنة التي تتيح لك التعبير الحر والابتكار.", recs: ["كلية العمارة - جامعة الكويت", "كلية الآداب - جامعة الكويت", "كلية الفنون والعلوم الإنسانية - AUK", "كلية الفنون والعلوم - GUST"] },
+  S: { code: "S", title: "الاجتماعي المساعد", emoji: "🤝", desc: "لديك دافع قوي لمساعدة الآخرين والتأثير فيهم إيجاباً. بيئتك المثالية هي العمل مع الناس في مجالات التعليم والصحة والخدمة الاجتماعية.", recs: ["كلية التربية - جامعة الكويت", "كلية العلوم الاجتماعية - KU", "كلية التمريض - PAAET", "كلية التربية الأساسية - PAAET"] },
+  E: { code: "E", title: "القائد الريادي", emoji: "📊", desc: "تمتلك قدرات قيادية وإقناعية قوية. تنجذب نحو الأعمال وريادة المشاريع وتحب التأثير في الآخرين وتحقيق الأهداف التجارية.", recs: ["كلية العلوم الإدارية - جامعة الكويت", "كلية الأعمال والاقتصاد - AUK", "كلية الأعمال والإدارة - GUST", "كلية الحقوق - جامعة الكويت"] },
+  C: { code: "C", title: "المنظم الدقيق", emoji: "📋", desc: "تتميز بالدقة والتنظيم والانتباه للتفاصيل. تنجح في البيئات المنظمة وتجيد العمل مع الأرقام والبيانات والأنظمة والإجراءات الواضحة.", recs: ["المحاسبة / نظم المعلومات - كلية العلوم الإدارية KU", "كلية الدراسات التجارية - PAAET", "كلية الأعمال والإدارة - AUM", "KILAW - كلية القانون الكويتية العالمية"] },
 };
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
@@ -492,13 +498,14 @@ function AptitudeScreen() {
     if (current < APTITUDE_QUESTIONS.length - 1) {
       setCurrent(current + 1);
     } else {
-      // Calculate result
       const scores = {};
       Object.values(newAnswers).forEach(({ cat, val }) => {
         scores[cat] = (scores[cat] || 0) + val;
       });
-      const top = Object.entries(scores).sort((a, b) => b[1] - a[1])[0][0];
-      setResult(APTITUDE_RESULTS[top]);
+      const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+      const topCode = sorted[0][0];
+      const secondCode = sorted[1]?.[0] || "";
+      setResult({ ...APTITUDE_RESULTS[topCode], hollandCode: topCode + secondCode });
       setStep("result");
     }
   };
@@ -511,14 +518,17 @@ function AptitudeScreen() {
       <div style={{ fontSize: 13, color: COLORS.gray, marginBottom: 20 }}>اكتشف التخصص الذي يناسب شخصيتك وميولك</div>
       <div style={{ textAlign: "center", padding: "40px 20px", background: "white", borderRadius: 16, border: "1px solid #e5e7eb", marginBottom: 20 }}>
         <div style={{ fontSize: 64, marginBottom: 16 }}>🧠</div>
-        <div style={{ fontSize: 16, fontWeight: 600, color: "#111", marginBottom: 8 }}>اختبار الميول العلمية</div>
-        <div style={{ fontSize: 13, color: COLORS.gray, lineHeight: 1.7, marginBottom: 20 }}>
-          {APTITUDE_QUESTIONS.length} سؤالاً بسيطاً يساعدك على معرفة توجهاتك الأكاديمية<br />
+        <div style={{ fontSize: 16, fontWeight: 600, color: "#111", marginBottom: 8 }}>اختبار RIASEC للشخصية المهنية</div>
+        <div style={{ fontSize: 13, color: COLORS.gray, lineHeight: 1.7, marginBottom: 16 }}>
+          {APTITUDE_QUESTIONS.length} سؤالاً يحدد شخصيتك المهنية وفق نموذج Holland<br />
           يستغرق الاختبار حوالي 5 دقائق
         </div>
-        <div style={{ display: "flex", justifyContent: "center", gap: 16, marginBottom: 24 }}>
-          {["🔬 علوم", "⚙️ هندسة", "🏥 طب", "📊 أعمال", "⚖️ قانون", "🎨 فنون"].map(c => (
-            <span key={c} style={{ fontSize: 11, color: COLORS.gray }}>{c}</span>
+        <div style={{ display: "flex", justifyContent: "center", gap: 8, flexWrap: "wrap", marginBottom: 20 }}>
+          {[["R","🔧","عملي"],["I","🔬","محلل"],["A","🎨","مبدع"],["S","🤝","اجتماعي"],["E","📊","قيادي"],["C","📋","منظم"]].map(([code, icon, label]) => (
+            <div key={code} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: COLORS.navyLight, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13, color: COLORS.navy }}>{code}</div>
+              <span style={{ fontSize: 9, color: COLORS.gray }}>{label}</span>
+            </div>
           ))}
         </div>
         <button onClick={() => setStep("quiz")} style={{ background: COLORS.navy, color: "white", border: "none", borderRadius: 12, padding: "12px 32px", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>ابدأ الاختبار ←</button>
@@ -526,7 +536,7 @@ function AptitudeScreen() {
       <Card style={{ background: COLORS.navyLight, border: `1px solid ${COLORS.navy}20` }}>
         <div style={{ fontSize: 12, color: COLORS.navy, lineHeight: 1.8 }}>
           <strong>كيف يعمل الاختبار؟</strong><br />
-          ستُعرض عليك 20 جملة، اختر مدى تطابقها مع شخصيتك من 1 إلى 5. النتيجة ستقترح عليك التخصصات الأنسب لك.
+          ستُعرض عليك 20 جملة، اختر مدى تطابقها مع شخصيتك من 1 إلى 5. ستحصل على Holland Code يحدد نمطك المهني ويقترح التخصصات الأنسب لك.
         </div>
       </Card>
     </div>
@@ -571,11 +581,21 @@ function AptitudeScreen() {
     <div style={{ padding: "16px 16px 80px" }}>
       <div style={{ textAlign: "center", padding: "32px 20px", background: `linear-gradient(135deg, ${COLORS.navy}, #2a5298)`, borderRadius: 16, marginBottom: 16, color: "white" }}>
         <div style={{ fontSize: 56, marginBottom: 12 }}>{result.emoji}</div>
-        <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>ميولك تتجه نحو</div>
+        {/* Holland Code badge */}
+        <div style={{ display: "inline-flex", gap: 6, marginBottom: 14 }}>
+          {result.hollandCode.split("").map((letter, i) => (
+            <div key={letter} style={{ width: 36, height: 36, borderRadius: 8, background: i === 0 ? COLORS.gold : "rgba(255,255,255,.2)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 16, color: i === 0 ? COLORS.navy : "rgba(255,255,255,.8)" }}>
+              {letter}
+            </div>
+          ))}
+        </div>
+        <div style={{ fontSize: 12, color: "rgba(255,255,255,.6)", marginBottom: 4 }}>Holland Code · RIASEC</div>
+        <div style={{ fontSize: 13, color: "rgba(255,255,255,.75)", marginBottom: 8 }}>شخصيتك المهنية</div>
         <div style={{ fontSize: 22, fontWeight: 700, color: COLORS.gold }}>{result.title}</div>
+        <div style={{ fontSize: 11, color: "rgba(255,255,255,.5)", marginTop: 4 }}>{RIASEC_LABELS[result.code]}</div>
       </div>
       <Card style={{ marginBottom: 14 }}>
-        <div style={{ fontSize: 13, color: "#333", lineHeight: 1.8 }}>{result.desc}</div>
+        <div style={{ fontSize: 13, color: "#333", lineHeight: 1.9 }}>{result.desc}</div>
       </Card>
       <div style={{ fontSize: 14, fontWeight: 600, color: "#111", marginBottom: 10 }}>التخصصات المقترحة لك:</div>
       <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
