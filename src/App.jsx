@@ -776,16 +776,6 @@ function GpaScreen({ w = 480 }) {
         .map(col => ({ ...col, instName: inst.name }))
     ).sort((a, b) => b.conditions.minScore - a.conditions.minScore);
 
-    const notYet = INSTITUTIONS.flatMap(inst =>
-      inst.colleges
-        .filter(col => {
-          if (!col.conditions) return false;
-          if (stream === "arts" && col.stream === "sci") return false;
-          return col.conditions.minScore > result;
-        })
-        .map(col => ({ ...col, instName: inst.name, gap: col.conditions.minScore - result }))
-    ).sort((a, b) => a.gap - b.gap);
-
     return (
       <div style={{ padding: `16px ${px}px ${isDesktop ? 40 : 80}px` }}>
         {/* Score hero */}
@@ -821,28 +811,6 @@ function GpaScreen({ w = 480 }) {
             ))}
           </div>
         </div>
-
-        {/* Not yet */}
-        {notYet.length > 0 && (
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.gray, marginBottom: 10 }}>
-              📈 تحتاج تحسيناً للالتحاق بها
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {notYet.slice(0, 6).map((col, i) => (
-                <Card key={i} style={{ display: "flex", alignItems: "center", gap: 10, opacity: 0.8 }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: "#111" }}>{col.name}</div>
-                    <div style={{ fontSize: 11, color: COLORS.gray, marginTop: 1 }}>{col.instName}</div>
-                  </div>
-                  <span style={{ fontSize: 11, background: COLORS.redLight, color: COLORS.red, padding: "2px 8px", borderRadius: 20, fontWeight: 600, flexShrink: 0 }}>
-                    +{col.gap.toFixed(1)}%
-                  </span>
-                </Card>
-              ))}
-            </div>
-          </div>
-        )}
 
         <button onClick={reset} style={{ width: "100%", background: "white", border: `1px solid ${COLORS.navy}`, color: COLORS.navy, borderRadius: 12, padding: "12px", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
           احسب مجدداً
