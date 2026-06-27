@@ -166,6 +166,53 @@ const APTITUDE_RESULTS = {
   C: { code: "C", title: "المنظم الدقيق", emoji: "📋", desc: "تتميز بالدقة والتنظيم والانتباه للتفاصيل. تنجح في البيئات المنظمة وتجيد العمل مع الأرقام والبيانات والأنظمة والإجراءات الواضحة.", recs: ["المحاسبة / نظم المعلومات - كلية العلوم الإدارية KU", "كلية الدراسات التجارية - PAAET", "كلية الأعمال والإدارة - AUM", "KILAW - كلية القانون الكويتية العالمية"] },
 };
 
+// ─── GPA DATA ────────────────────────────────────────────────────────────────
+
+const SUBJECTS = {
+  sci: [
+    { id: "arabic",   label: "اللغة العربية" },
+    { id: "english",  label: "اللغة الإنجليزية" },
+    { id: "math",     label: "الرياضيات" },
+    { id: "physics",  label: "الفيزياء" },
+    { id: "chem",     label: "الكيمياء" },
+    { id: "bio",      label: "الأحياء" },
+    { id: "islamic",  label: "التربية الإسلامية" },
+    { id: "social",   label: "الدراسات الاجتماعية" },
+  ],
+  arts: [
+    { id: "arabic",   label: "اللغة العربية" },
+    { id: "english",  label: "اللغة الإنجليزية" },
+    { id: "math",     label: "الرياضيات" },
+    { id: "history",  label: "التاريخ" },
+    { id: "geo",      label: "الجغرافيا" },
+    { id: "islamic",  label: "التربية الإسلامية" },
+    { id: "social",   label: "الدراسات الاجتماعية" },
+    { id: "econ",     label: "الاقتصاد" },
+  ],
+};
+
+function toGPA(pct) {
+  if (pct >= 90) return 4.0;
+  if (pct >= 85) return 3.7;
+  if (pct >= 80) return 3.3;
+  if (pct >= 75) return 3.0;
+  if (pct >= 70) return 2.7;
+  if (pct >= 65) return 2.3;
+  if (pct >= 60) return 2.0;
+  if (pct >= 55) return 1.7;
+  if (pct >= 50) return 1.3;
+  if (pct >= 45) return 1.0;
+  return 0.0;
+}
+
+function gradeLabel(pct) {
+  if (pct >= 90) return "ممتاز";
+  if (pct >= 80) return "جيد جداً";
+  if (pct >= 70) return "جيد";
+  if (pct >= 60) return "مقبول";
+  return "دون المستوى";
+}
+
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 
 const COLORS = {
@@ -227,16 +274,17 @@ function HomeScreen({ setScreen, w = 480 }) {
 
       <div style={{ padding: `16px ${px}px ${isDesktop ? 40 : 80}px` }}>
         {/* Quick actions */}
-        <div style={{ display: "grid", gridTemplateColumns: `repeat(${isDesktop ? 4 : 4},1fr)`, gap: isDesktop ? 14 : 10, marginBottom: 28 }}>
+        <div style={{ display: "grid", gridTemplateColumns: isDesktop ? "repeat(5,1fr)" : "repeat(5,1fr)", gap: isDesktop ? 12 : 8, marginBottom: 28 }}>
           {[
-            { icon: "🎓", label: "التخصصات", screen: "majors" },
-            { icon: "📅", label: "المواعيد", screen: "dates" },
-            { icon: "✈️", label: "البعثات", screen: "scholarships" },
+            { icon: "🎓", label: "التخصصات",     screen: "majors" },
+            { icon: "🎯", label: "المعدل",        screen: "gpa" },
             { icon: "🧠", label: "اختبار الميول", screen: "aptitude" },
+            { icon: "✈️", label: "البعثات",       screen: "scholarships" },
+            { icon: "📅", label: "المواعيد",      screen: "dates" },
           ].map(q => (
-            <button key={q.screen} onClick={() => setScreen(q.screen)} style={{ background: "white", border: "1px solid #e5e7eb", borderRadius: 14, padding: isDesktop ? "18px 8px" : "12px 6px", display: "flex", flexDirection: "column", alignItems: "center", gap: 8, cursor: "pointer", fontFamily: "inherit", transition: "box-shadow .15s" }}>
-              <span style={{ fontSize: isDesktop ? 28 : 24 }}>{q.icon}</span>
-              <span style={{ fontSize: isDesktop ? 12 : 10, color: COLORS.gray, textAlign: "center" }}>{q.label}</span>
+            <button key={q.screen} onClick={() => setScreen(q.screen)} style={{ background: "white", border: "1px solid #e5e7eb", borderRadius: 14, padding: isDesktop ? "18px 6px" : "10px 4px", display: "flex", flexDirection: "column", alignItems: "center", gap: 6, cursor: "pointer", fontFamily: "inherit" }}>
+              <span style={{ fontSize: isDesktop ? 26 : 22 }}>{q.icon}</span>
+              <span style={{ fontSize: isDesktop ? 11 : 9, color: COLORS.gray, textAlign: "center" }}>{q.label}</span>
             </button>
           ))}
         </div>
@@ -663,6 +711,200 @@ function AptitudeScreen({ w = 480 }) {
   return null;
 }
 
+// ─── GPA SCREEN ──────────────────────────────────────────────────────────────
+
+function GpaScreen({ w = 480 }) {
+  const isDesktop = w >= 1024;
+  const px = isDesktop ? 32 : 16;
+
+  const [stream, setStream] = useState(null);
+  const [grades, setGrades] = useState({});
+  const [result, setResult] = useState(null);
+
+  const subjects = stream ? SUBJECTS[stream] : [];
+  const filled = subjects.filter(s => grades[s.id] !== undefined && grades[s.id] !== "");
+  const liveAvg = filled.length ? filled.reduce((a, s) => a + Number(grades[s.id]), 0) / filled.length : null;
+  const allFilled = subjects.length > 0 && subjects.every(s => {
+    const v = grades[s.id]; return v !== undefined && v !== "" && Number(v) >= 0 && Number(v) <= 100;
+  });
+
+  const calculate = () => {
+    const avg = subjects.reduce((a, s) => a + Number(grades[s.id]), 0) / subjects.length;
+    setResult(avg);
+  };
+
+  const reset = () => { setResult(null); setGrades({}); setStream(null); };
+
+  // ── Stream picker ──
+  if (!stream) return (
+    <div style={{ padding: `24px ${px}px ${isDesktop ? 40 : 80}px` }}>
+      <div style={{ fontSize: 18, fontWeight: 700, color: "#111", marginBottom: 6 }}>حاسبة المعدل والقبول</div>
+      <div style={{ fontSize: 13, color: COLORS.gray, marginBottom: 24 }}>اختر فرعك الدراسي لإدخال درجاتك</div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 24 }}>
+        {[
+          { id: "sci",  icon: "🔬", label: "الفرع العلمي",  desc: "فيزياء · كيمياء · أحياء · رياضيات" },
+          { id: "arts", icon: "📚", label: "الفرع الأدبي",  desc: "تاريخ · جغرافيا · اقتصاد · رياضيات" },
+        ].map(s => (
+          <button key={s.id} onClick={() => setStream(s.id)} style={{ background: "white", border: "2px solid #e5e7eb", borderRadius: 16, padding: "28px 12px", display: "flex", flexDirection: "column", alignItems: "center", gap: 10, cursor: "pointer", fontFamily: "inherit" }}>
+            <span style={{ fontSize: 40 }}>{s.icon}</span>
+            <span style={{ fontSize: 14, fontWeight: 700, color: "#111" }}>{s.label}</span>
+            <span style={{ fontSize: 11, color: COLORS.gray, textAlign: "center", lineHeight: 1.5 }}>{s.desc}</span>
+          </button>
+        ))}
+      </div>
+      <Card style={{ background: COLORS.navyLight, border: `1px solid ${COLORS.navy}20` }}>
+        <div style={{ fontSize: 12, color: COLORS.navy, lineHeight: 1.8 }}>
+          📌 أدخل درجاتك في كل مادة من 100 وسيحسب التطبيق معدلك ويعرض الكليات التي تنطبق عليها شروط قبولها.
+        </div>
+      </Card>
+    </div>
+  );
+
+  // ── Result ──
+  if (result !== null) {
+    const gpa = toGPA(result);
+    const lbl = gradeLabel(result);
+    const heroColor = result >= 80 ? COLORS.green : result >= 65 ? COLORS.navy : COLORS.red;
+
+    const qualifying = INSTITUTIONS.flatMap(inst =>
+      inst.colleges
+        .filter(col => {
+          if (!col.conditions) return false;
+          if (stream === "arts" && col.stream === "sci") return false;
+          return col.conditions.minScore <= result;
+        })
+        .map(col => ({ ...col, instName: inst.name }))
+    ).sort((a, b) => b.conditions.minScore - a.conditions.minScore);
+
+    const notYet = INSTITUTIONS.flatMap(inst =>
+      inst.colleges
+        .filter(col => {
+          if (!col.conditions) return false;
+          if (stream === "arts" && col.stream === "sci") return false;
+          return col.conditions.minScore > result;
+        })
+        .map(col => ({ ...col, instName: inst.name, gap: col.conditions.minScore - result }))
+    ).sort((a, b) => a.gap - b.gap);
+
+    return (
+      <div style={{ padding: `16px ${px}px ${isDesktop ? 40 : 80}px` }}>
+        {/* Score hero */}
+        <div style={{ background: `linear-gradient(135deg, ${heroColor}, ${heroColor}cc)`, borderRadius: 16, padding: "28px 20px", textAlign: "center", color: "white", marginBottom: 20 }}>
+          <div style={{ fontSize: 12, color: "rgba(255,255,255,.7)", marginBottom: 6 }}>
+            {stream === "sci" ? "🔬 الفرع العلمي" : "📚 الفرع الأدبي"} · نتيجتك
+          </div>
+          <div style={{ fontSize: 60, fontWeight: 800, lineHeight: 1, color: "white" }}>{result.toFixed(1)}<span style={{ fontSize: 24 }}>%</span></div>
+          <div style={{ fontSize: 15, color: "rgba(255,255,255,.85)", margin: "8px 0 16px" }}>{lbl}</div>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 10, background: "rgba(255,255,255,.18)", borderRadius: 20, padding: "8px 20px" }}>
+            <span style={{ fontSize: 12, color: "rgba(255,255,255,.75)" }}>GPA</span>
+            <span style={{ fontSize: 22, fontWeight: 800, color: "white" }}>{gpa.toFixed(1)}</span>
+            <span style={{ fontSize: 12, color: "rgba(255,255,255,.6)" }}>/ 4.0</span>
+          </div>
+        </div>
+
+        {/* Qualifying */}
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.green, marginBottom: 10 }}>
+            ✅ الكليات المتاحة لك — {qualifying.length} كلية
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {qualifying.map((col, i) => (
+              <Card key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 12, fontWeight: 600, color: "#111" }}>{col.name}</div>
+                  <div style={{ fontSize: 11, color: COLORS.gray, marginTop: 1 }}>{col.instName}</div>
+                </div>
+                <span style={{ fontSize: 11, background: COLORS.greenLight, color: COLORS.green, padding: "2px 8px", borderRadius: 20, fontWeight: 600, flexShrink: 0 }}>
+                  حد {col.conditions.minScore}%
+                </span>
+              </Card>
+            ))}
+          </div>
+        </div>
+
+        {/* Not yet */}
+        {notYet.length > 0 && (
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.gray, marginBottom: 10 }}>
+              📈 تحتاج تحسيناً للالتحاق بها
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {notYet.slice(0, 6).map((col, i) => (
+                <Card key={i} style={{ display: "flex", alignItems: "center", gap: 10, opacity: 0.8 }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: "#111" }}>{col.name}</div>
+                    <div style={{ fontSize: 11, color: COLORS.gray, marginTop: 1 }}>{col.instName}</div>
+                  </div>
+                  <span style={{ fontSize: 11, background: COLORS.redLight, color: COLORS.red, padding: "2px 8px", borderRadius: 20, fontWeight: 600, flexShrink: 0 }}>
+                    +{col.gap.toFixed(1)}%
+                  </span>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <button onClick={reset} style={{ width: "100%", background: "white", border: `1px solid ${COLORS.navy}`, color: COLORS.navy, borderRadius: 12, padding: "12px", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+          احسب مجدداً
+        </button>
+      </div>
+    );
+  }
+
+  // ── Grade inputs ──
+  return (
+    <div style={{ padding: `16px ${px}px ${isDesktop ? 40 : 80}px` }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+        <button onClick={() => { setStream(null); setGrades({}); }} style={{ background: COLORS.navyLight, border: "none", borderRadius: 8, padding: "6px 12px", cursor: "pointer", color: COLORS.navy, fontSize: 13, fontFamily: "inherit" }}>← رجوع</button>
+        <span style={{ fontSize: 15, fontWeight: 700, color: "#111" }}>{stream === "sci" ? "🔬 الفرع العلمي" : "📚 الفرع الأدبي"}</span>
+      </div>
+
+      {/* Live average bar */}
+      {liveAvg !== null && (
+        <div style={{ background: "white", border: "1px solid #e5e7eb", borderRadius: 12, padding: "12px 16px", marginBottom: 14, display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 11, color: COLORS.gray, marginBottom: 6 }}>المعدل الحالي ({filled.length}/{subjects.length} مواد)</div>
+            <div style={{ background: "#e5e7eb", borderRadius: 20, height: 8, overflow: "hidden" }}>
+              <div style={{ background: liveAvg >= 80 ? COLORS.green : liveAvg >= 65 ? COLORS.navy : COLORS.red, width: `${Math.min(liveAvg, 100)}%`, height: "100%", borderRadius: 20, transition: "width .3s, background .3s" }} />
+            </div>
+          </div>
+          <div style={{ fontSize: 24, fontWeight: 800, color: liveAvg >= 80 ? COLORS.green : liveAvg >= 65 ? COLORS.navy : COLORS.red, minWidth: 56, textAlign: "center" }}>
+            {liveAvg.toFixed(1)}%
+          </div>
+        </div>
+      )}
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
+        {subjects.map(s => {
+          const val = grades[s.id] ?? "";
+          const num = Number(val);
+          const valid = val !== "" && num >= 0 && num <= 100;
+          const scoreColor = valid ? (num >= 80 ? COLORS.green : num >= 60 ? COLORS.navy : COLORS.red) : "#111";
+          const scoreBg   = valid ? (num >= 80 ? COLORS.greenLight : num >= 60 ? COLORS.navyLight : COLORS.redLight) : "white";
+          return (
+            <div key={s.id} style={{ background: "white", border: "1px solid #e5e7eb", borderRadius: 10, padding: "10px 14px", display: "flex", alignItems: "center", gap: 12 }}>
+              <span style={{ flex: 1, fontSize: 13, color: "#111" }}>{s.label}</span>
+              <input
+                type="number" min="0" max="100" inputMode="numeric" value={val}
+                onChange={e => setGrades(g => ({ ...g, [s.id]: e.target.value }))}
+                placeholder="–"
+                style={{ width: 68, padding: "7px 8px", border: `1.5px solid ${valid ? scoreColor + "60" : "#e5e7eb"}`, borderRadius: 8, fontSize: 16, fontWeight: 700, textAlign: "center", color: scoreColor, background: scoreBg, outline: "none", fontFamily: "inherit" }}
+              />
+            </div>
+          );
+        })}
+      </div>
+
+      <button
+        onClick={calculate} disabled={!allFilled}
+        style={{ width: "100%", background: allFilled ? COLORS.navy : "#e5e7eb", color: allFilled ? "white" : COLORS.gray, border: "none", borderRadius: 12, padding: "14px", fontSize: 15, fontWeight: 700, cursor: allFilled ? "pointer" : "not-allowed", fontFamily: "inherit", transition: "background .2s" }}
+      >
+        {allFilled ? "احسب المعدل ←" : `أدخل جميع الدرجات (${filled.length} / ${subjects.length})`}
+      </button>
+    </div>
+  );
+}
+
 // ─── APP SHELL ────────────────────────────────────────────────────────────────
 
 export default function App() {
@@ -672,14 +914,15 @@ export default function App() {
   const isTablet = w >= 640;
 
   const tabs = [
-    { id: "home", label: "الرئيسية", icon: "🏠" },
-    { id: "majors", label: "التخصصات", icon: "📚" },
-    { id: "aptitude", label: "اختبار الميول", icon: "🧠" },
-    { id: "scholarships", label: "البعثات", icon: "✈️" },
-    { id: "dates", label: "المواعيد", icon: "📅" },
+    { id: "home",        label: "الرئيسية",     icon: "🏠" },
+    { id: "majors",      label: "التخصصات",     icon: "📚" },
+    { id: "gpa",         label: "المعدل",        icon: "🎯" },
+    { id: "aptitude",    label: "اختبار الميول", icon: "🧠" },
+    { id: "scholarships",label: "البعثات",       icon: "✈️" },
+    { id: "dates",       label: "المواعيد",      icon: "📅" },
   ];
 
-  const screens = { home: HomeScreen, majors: MajorsScreen, dates: DatesScreen, scholarships: ScholarshipsScreen, aptitude: AptitudeScreen };
+  const screens = { home: HomeScreen, majors: MajorsScreen, dates: DatesScreen, scholarships: ScholarshipsScreen, aptitude: AptitudeScreen, gpa: GpaScreen };
   const ActiveScreen = screens[screen] || HomeScreen;
 
   return (
