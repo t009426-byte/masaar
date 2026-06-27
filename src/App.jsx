@@ -999,7 +999,11 @@ function AuthScreen({ onAuth }) {
         password,
         options: { data: { name: name.trim() } },
       });
-      if (error) return setError(error.message);
+      if (error) {
+        if (error.message.includes("rate limit") || error.status === 429)
+          return setError("تجاوزت الحد المسموح — انتظر قليلاً ثم حاول مجدداً");
+        return setError(error.message);
+      }
       if (data.user) onAuth(normalizeUser(data.user));
       else setError("تحقق من بريدك الإلكتروني لتأكيد الحساب");
     } else {
