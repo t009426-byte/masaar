@@ -257,7 +257,7 @@ function Card({ children, style = {} }) {
 
 // ─── SCREENS ─────────────────────────────────────────────────────────────────
 
-function HomeScreen({ setScreen, w = 480 }) {
+function HomeScreen({ setScreen, w = 480, user, logout }) {
   const isDesktop = w >= 1024;
   const isTablet = w >= 640;
   const px = isDesktop ? 32 : 16;
@@ -272,10 +272,13 @@ function HomeScreen({ setScreen, w = 480 }) {
               <MasaarIcon size={36} />
               <span style={{ color: "white", fontSize: 18, fontWeight: 600 }}>مسار</span>
             </div>
-            <div style={{ width: 34, height: 34, background: "rgba(255,255,255,.15)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>🔔</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ width: 34, height: 34, background: COLORS.gold, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, color: COLORS.navy, fontSize: 14 }}>{user?.name?.[0] ?? "م"}</div>
+              <button onClick={logout} style={{ background: "rgba(255,255,255,.15)", border: "none", borderRadius: 8, padding: "6px 10px", color: "rgba(255,255,255,.8)", fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}>خروج</button>
+            </div>
           </div>
         )}
-        <div style={{ color: "rgba(255,255,255,.75)", fontSize: isDesktop ? 14 : 13, marginBottom: 4 }}>أهلاً بك في مسار</div>
+        <div style={{ color: "rgba(255,255,255,.75)", fontSize: isDesktop ? 14 : 13, marginBottom: 4 }}>أهلاً {user?.name ? `يا ${user.name.split(" ")[0]}` : "بك في مسار"} 👋</div>
         <div style={{ color: "white", fontSize: isDesktop ? 26 : 20, fontWeight: 700, marginBottom: 20 }}>دليلك لمرحلة ما بعد الثانوية 🎓</div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10 }}>
           {[["8", "مؤسسة"], [`${totalMajors}+`, "تخصص"], ["6", "بعثات"]].map(([n, l]) => (
@@ -888,13 +891,115 @@ function GpaScreen({ w = 480 }) {
   );
 }
 
+// ─── AUTH SCREEN ─────────────────────────────────────────────────────────────
+
+function AuthScreen({ onAuth }) {
+  const [mode, setMode] = useState("register");
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPass, setShowPass] = useState(false);
+  const [error, setError] = useState("");
+
+  function submit(e) {
+    e.preventDefault();
+    setError("");
+    if (mode === "register") {
+      if (!name.trim()) return setError("الرجاء إدخال اسمك");
+      if (!email.includes("@")) return setError("البريد الإلكتروني غير صحيح");
+      if (password.length < 6) return setError("كلمة المرور 6 أحرف على الأقل");
+      const user = { name: name.trim(), email: email.trim().toLowerCase() };
+      localStorage.setItem("masaar_user", JSON.stringify(user));
+      localStorage.setItem("masaar_pass", password);
+      onAuth(user);
+    } else {
+      const stored = localStorage.getItem("masaar_user");
+      if (!stored) return setError("لا يوجد حساب، سجّل أولاً");
+      const user = JSON.parse(stored);
+      if (user.email !== email.trim().toLowerCase()) return setError("البريد الإلكتروني غير صحيح");
+      if (localStorage.getItem("masaar_pass") !== password) return setError("كلمة المرور غير صحيحة");
+      onAuth(user);
+    }
+  }
+
+  const inp = {
+    width: "100%", padding: "13px 14px", border: "1.5px solid #e5e7eb",
+    borderRadius: 10, fontSize: 15, fontFamily: "inherit", outline: "none",
+    boxSizing: "border-box", background: "white", color: "#111",
+    transition: "border .15s",
+  };
+
+  return (
+    <div style={{ minHeight: "100vh", background: COLORS.navy, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 16px", direction: "rtl", fontFamily: "system-ui, -apple-system, sans-serif" }}>
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 32 }}>
+        <MasaarIcon size={72} />
+        <div style={{ color: "white", fontSize: 28, fontWeight: 700, marginTop: 14 }}>مسار</div>
+        <div style={{ color: "rgba(255,255,255,.5)", fontSize: 13, marginTop: 4 }}>دليلك نحو مستقبلك</div>
+      </div>
+
+      <div style={{ background: "white", borderRadius: 20, padding: "28px 24px", width: "100%", maxWidth: 380 }}>
+        <div style={{ display: "flex", background: "#f3f4f6", borderRadius: 10, padding: 3, marginBottom: 24 }}>
+          {[["register", "تسجيل جديد"], ["login", "دخول"]].map(([m, lbl]) => (
+            <button key={m} onClick={() => { setMode(m); setError(""); }}
+              style={{ flex: 1, padding: "9px", border: "none", borderRadius: 8, background: mode === m ? "white" : "transparent", color: mode === m ? COLORS.navy : COLORS.gray, fontWeight: mode === m ? 600 : 400, fontSize: 14, cursor: "pointer", fontFamily: "inherit", boxShadow: mode === m ? "0 1px 4px rgba(0,0,0,.1)" : "none", transition: "all .15s" }}>
+              {lbl}
+            </button>
+          ))}
+        </div>
+
+        <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {mode === "register" && (
+            <div>
+              <label style={{ fontSize: 13, color: COLORS.gray, display: "block", marginBottom: 6 }}>الاسم الكامل</label>
+              <input value={name} onChange={e => setName(e.target.value)} placeholder="أدخل اسمك الكامل" style={{ ...inp, direction: "rtl" }} />
+            </div>
+          )}
+          <div>
+            <label style={{ fontSize: 13, color: COLORS.gray, display: "block", marginBottom: 6 }}>البريد الإلكتروني</label>
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="example@email.com" style={{ ...inp, direction: "ltr", textAlign: "right" }} />
+          </div>
+          <div>
+            <label style={{ fontSize: 13, color: COLORS.gray, display: "block", marginBottom: 6 }}>كلمة المرور</label>
+            <div style={{ position: "relative" }}>
+              <input type={showPass ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••" style={{ ...inp, direction: "ltr", textAlign: "right", paddingLeft: 42 }} />
+              <button type="button" onClick={() => setShowPass(p => !p)} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: COLORS.gray, fontSize: 14, padding: 0 }}>
+                {showPass ? "🙈" : "👁️"}
+              </button>
+            </div>
+          </div>
+
+          {error && (
+            <div style={{ background: COLORS.redLight, color: COLORS.red, borderRadius: 8, padding: "10px 12px", fontSize: 13 }}>{error}</div>
+          )}
+
+          <button type="submit" style={{ background: COLORS.navy, color: "white", border: "none", borderRadius: 12, padding: "14px", fontSize: 15, fontWeight: 700, cursor: "pointer", fontFamily: "inherit", marginTop: 4 }}>
+            {mode === "register" ? "إنشاء الحساب ←" : "دخول ←"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 // ─── APP SHELL ────────────────────────────────────────────────────────────────
 
 export default function App() {
+  const [user, setUser] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("masaar_user")); } catch { return null; }
+  });
   const [screen, setScreen] = useState("home");
   const w = useWindowSize();
   const isDesktop = w >= 1024;
   const isTablet = w >= 640;
+
+  if (!user) return <AuthScreen onAuth={setUser} />;
+
+  function logout() {
+    localStorage.removeItem("masaar_user");
+    localStorage.removeItem("masaar_pass");
+    setUser(null);
+    setScreen("home");
+  }
 
   const tabs = [
     { id: "home",        label: "الرئيسية",     icon: "🏠" },
@@ -929,6 +1034,16 @@ export default function App() {
               </button>
             ))}
           </nav>
+          <div style={{ padding: "16px 20px", borderTop: "1px solid rgba(255,255,255,.1)" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+              <div style={{ width: 34, height: 34, background: COLORS.gold, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, color: COLORS.navy, fontSize: 14, flexShrink: 0 }}>{user.name[0]}</div>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ color: "white", fontSize: 13, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.name}</div>
+                <div style={{ color: "rgba(255,255,255,.4)", fontSize: 11, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.email}</div>
+              </div>
+            </div>
+            <button onClick={logout} style={{ width: "100%", background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.12)", borderRadius: 8, padding: "7px 12px", color: "rgba(255,255,255,.6)", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}>تسجيل الخروج</button>
+          </div>
         </aside>
       )}
 
@@ -954,7 +1069,7 @@ export default function App() {
 
         {/* Screen content — centered & max-width capped on mobile/tablet */}
         <div style={{ flex: 1, width: "100%", maxWidth: isDesktop ? "none" : isTablet ? 600 : 480, margin: isDesktop ? 0 : "0 auto", paddingBottom: isDesktop ? 0 : 64 }}>
-          <ActiveScreen setScreen={setScreen} w={w} />
+          <ActiveScreen setScreen={setScreen} w={w} user={user} logout={logout} />
         </div>
 
         {/* Mobile / tablet bottom nav */}
