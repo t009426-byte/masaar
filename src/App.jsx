@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { supabase, normalizeUser } from "./supabase";
 
 function useWindowSize() {
   const [w, setW] = useState(typeof window !== "undefined" ? window.innerWidth : 480);
@@ -904,12 +905,11 @@ function ProfileScreen({ setScreen, w = 480, user, logout, updateUser }) {
     setTimeout(() => setFlash(""), 2000);
   }
 
-  function changePassword() {
-    const current = prompt("كلمة المرور الحالية:");
-    if (current !== localStorage.getItem("masaar_pass")) { alert("كلمة المرور غير صحيحة"); return; }
+  async function changePassword() {
     const next = prompt("كلمة المرور الجديدة (6 أحرف على الأقل):");
     if (!next || next.length < 6) { alert("كلمة المرور قصيرة جداً"); return; }
-    localStorage.setItem("masaar_pass", next);
+    const { error } = await supabase.auth.updateUser({ password: next });
+    if (error) { alert("حدث خطأ: " + error.message); return; }
     setFlash("تم تغيير كلمة المرور ✓");
     setTimeout(() => setFlash(""), 2000);
   }
@@ -987,24 +987,28 @@ function AuthScreen({ onAuth }) {
   const [showPass, setShowPass] = useState(false);
   const [error, setError] = useState("");
 
-  function submit(e) {
+  async function submit(e) {
     e.preventDefault();
     setError("");
     if (mode === "register") {
       if (!name.trim()) return setError("الرجاء إدخال اسمك");
       if (!email.includes("@")) return setError("البريد الإلكتروني غير صحيح");
       if (password.length < 6) return setError("كلمة المرور 6 أحرف على الأقل");
-      const user = { name: name.trim(), email: email.trim().toLowerCase() };
-      localStorage.setItem("masaar_user", JSON.stringify(user));
-      localStorage.setItem("masaar_pass", password);
-      onAuth(user);
+      const { data, error } = await supabase.auth.signUp({
+        email: email.trim().toLowerCase(),
+        password,
+        options: { data: { name: name.trim() } },
+      });
+      if (error) return setError(error.message);
+      if (data.user) onAuth(normalizeUser(data.user));
+      else setError("تحقق من بريدك الإلكتروني لتأكيد الحساب");
     } else {
-      const stored = localStorage.getItem("masaar_user");
-      if (!stored) return setError("لا يوجد حساب، سجّل أولاً");
-      const user = JSON.parse(stored);
-      if (user.email !== email.trim().toLowerCase()) return setError("البريد الإلكتروني غير صحيح");
-      if (localStorage.getItem("masaar_pass") !== password) return setError("كلمة المرور غير صحيحة");
-      onAuth(user);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim().toLowerCase(),
+        password,
+      });
+      if (error) return setError("البريد الإلكتروني أو كلمة المرور غير صحيحة");
+      onAuth(normalizeUser(data.user));
     }
   }
 
@@ -1070,26 +1074,35 @@ function AuthScreen({ onAuth }) {
 // ─── APP SHELL ────────────────────────────────────────────────────────────────
 
 export default function App() {
-  const [user, setUser] = useState(() => {
-    try { return JSON.parse(localStorage.getItem("masaar_user")); } catch { return null; }
-  });
+  const [user, setUser] = useState(null);
+  const [authReady, setAuthReady] = useState(false);
   const [screen, setScreen] = useState("home");
   const w = useWindowSize();
   const isDesktop = w >= 1024;
   const isTablet = w >= 640;
 
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setUser(normalizeUser(data.session?.user ?? null));
+      setAuthReady(true);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(normalizeUser(session?.user ?? null));
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  if (!authReady) return null;
   if (!user) return <AuthScreen onAuth={setUser} />;
 
-  function logout() {
-    localStorage.removeItem("masaar_user");
-    localStorage.removeItem("masaar_pass");
-    setUser(null);
+  async function logout() {
+    await supabase.auth.signOut();
     setScreen("home");
   }
 
-  function updateUser(updated) {
-    localStorage.setItem("masaar_user", JSON.stringify(updated));
-    setUser(updated);
+  async function updateUser(updated) {
+    const { data, error } = await supabase.auth.updateUser({ data: { name: updated.name } });
+    if (!error) setUser(normalizeUser(data.user));
   }
 
   const tabs = [
