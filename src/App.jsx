@@ -216,13 +216,28 @@ function gradeLabel(pct) {
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
 
 const COLORS = {
-  navy: "#1a3a6b", navyLight: "#e8eef7", gold: "#C8A84B",
+  navy: "#1C3560", navyLight: "#e8eef7", gold: "#C4972A",
   green: "#1d6b4f", greenLight: "#e2f5ed",
   purple: "#5c3d99", purpleLight: "#ede8f8",
   red: "#c0392b", redLight: "#fbeaea",
   orange: "#d35400", orangeLight: "#fef0e7",
   gray: "#6b7280", grayLight: "#f3f4f6",
 };
+
+function MasaarIcon({ size = 40 }) {
+  return (
+    <svg width={size} height={size} viewBox="-35 -35 70 70" style={{ display: "block", flexShrink: 0 }}>
+      <circle cx={0} cy={0} r={34} fill={COLORS.gold} />
+      <g fill="none" stroke={COLORS.navy} strokeLinecap="round">
+        <circle cx={0} cy={-22} r={4} fill={COLORS.navy} stroke="none" />
+        <line x1={0} y1={-18} x2={-18} y2={24} strokeWidth={2.8} />
+        <line x1={0} y1={-18} x2={18} y2={24} strokeWidth={2.8} />
+        <line x1={-0.8} y1={-8} x2={-4} y2={24} strokeWidth={1.8} strokeDasharray="4.5,3.5" />
+        <line x1={0.8} y1={-8} x2={4} y2={24} strokeWidth={1.8} strokeDasharray="4.5,3.5" />
+      </g>
+    </svg>
+  );
+}
 
 function Badge({ children, color = "navy" }) {
   const map = { navy: [COLORS.navyLight, COLORS.navy], green: [COLORS.greenLight, COLORS.green], purple: [COLORS.purpleLight, COLORS.purple], red: [COLORS.redLight, COLORS.red], orange: [COLORS.orangeLight, COLORS.orange], gray: [COLORS.grayLight, COLORS.gray] };
@@ -254,13 +269,13 @@ function HomeScreen({ setScreen, w = 480 }) {
         {!isDesktop && (
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ width: 36, height: 36, background: COLORS.gold, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, color: COLORS.navy, fontSize: 16 }}>خ</div>
-              <span style={{ color: "white", fontSize: 18, fontWeight: 600 }}>خريّج</span>
+              <MasaarIcon size={36} />
+              <span style={{ color: "white", fontSize: 18, fontWeight: 600 }}>مسار</span>
             </div>
             <div style={{ width: 34, height: 34, background: "rgba(255,255,255,.15)", borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>🔔</div>
           </div>
         )}
-        <div style={{ color: "rgba(255,255,255,.75)", fontSize: isDesktop ? 14 : 13, marginBottom: 4 }}>أهلاً بك في خريّج</div>
+        <div style={{ color: "rgba(255,255,255,.75)", fontSize: isDesktop ? 14 : 13, marginBottom: 4 }}>أهلاً بك في مسار</div>
         <div style={{ color: "white", fontSize: isDesktop ? 26 : 20, fontWeight: 700, marginBottom: 20 }}>دليلك لمرحلة ما بعد الثانوية 🎓</div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 10 }}>
           {[["8", "مؤسسة"], [`${totalMajors}+`, "تخصص"], ["6", "بعثات"]].map(([n, l]) => (
@@ -901,10 +916,10 @@ export default function App() {
         <aside style={{ width: 220, flexShrink: 0, background: COLORS.navy, minHeight: "100vh", position: "sticky", top: 0, height: "100vh", display: "flex", flexDirection: "column", overflowY: "auto" }}>
           <div style={{ padding: "28px 20px 20px", borderBottom: "1px solid rgba(255,255,255,.1)" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <div style={{ width: 40, height: 40, background: COLORS.gold, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, color: COLORS.navy, fontSize: 18 }}>خ</div>
-              <span style={{ color: "white", fontSize: 20, fontWeight: 700 }}>خريّج</span>
+              <MasaarIcon size={40} />
+              <span style={{ color: "white", fontSize: 20, fontWeight: 700 }}>مسار</span>
             </div>
-            <div style={{ color: "rgba(255,255,255,.4)", fontSize: 11, marginTop: 8 }}>دليل ما بعد الثانوية</div>
+            <div style={{ color: "rgba(255,255,255,.4)", fontSize: 11, marginTop: 8 }}>دليلك نحو مستقبلك</div>
           </div>
           <nav style={{ padding: "12px 0", flex: 1 }}>
             {tabs.map(t => (
@@ -924,7 +939,7 @@ export default function App() {
         {!isDesktop && screen !== "home" && (
           <div style={{ background: COLORS.navy, padding: "14px 16px", display: "flex", alignItems: "center", gap: 10, position: "sticky", top: 0, zIndex: 10 }}>
             <button onClick={() => setScreen("home")} style={{ background: "rgba(255,255,255,.15)", border: "none", borderRadius: "50%", width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "white", fontSize: 16 }}>←</button>
-            <div style={{ width: 28, height: 28, background: COLORS.gold, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, color: COLORS.navy, fontSize: 12 }}>خ</div>
+            <MasaarIcon size={28} />
             <span style={{ color: "white", fontWeight: 600, fontSize: 15 }}>{tabs.find(t => t.id === screen)?.label}</span>
           </div>
         )}
