@@ -272,10 +272,7 @@ function HomeScreen({ setScreen, w = 480, user, logout }) {
               <MasaarIcon size={36} />
               <span style={{ color: "white", fontSize: 18, fontWeight: 600 }}>مسار</span>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{ width: 34, height: 34, background: COLORS.gold, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, color: COLORS.navy, fontSize: 14 }}>{user?.name?.[0] ?? "م"}</div>
-              <button onClick={logout} style={{ background: "rgba(255,255,255,.15)", border: "none", borderRadius: 8, padding: "6px 10px", color: "rgba(255,255,255,.8)", fontSize: 11, cursor: "pointer", fontFamily: "inherit" }}>خروج</button>
-            </div>
+            <button onClick={() => setScreen("profile")} style={{ width: 34, height: 34, background: COLORS.gold, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, color: COLORS.navy, fontSize: 14, border: "none", cursor: "pointer", flexShrink: 0 }}>{user?.name?.[0] ?? "م"}</button>
           </div>
         )}
         <div style={{ color: "rgba(255,255,255,.75)", fontSize: isDesktop ? 14 : 13, marginBottom: 4 }}>أهلاً {user?.name ? `يا ${user.name.split(" ")[0]}` : "بك في مسار"} 👋</div>
@@ -891,6 +888,96 @@ function GpaScreen({ w = 480 }) {
   );
 }
 
+// ─── PROFILE SCREEN ──────────────────────────────────────────────────────────
+
+function ProfileScreen({ setScreen, w = 480, user, logout, updateUser }) {
+  const isDesktop = w >= 1024;
+  const px = isDesktop ? 32 : 16;
+  const [editing, setEditing] = useState(false);
+  const [draftName, setDraftName] = useState(user.name);
+  const [flash, setFlash] = useState("");
+
+  function saveName() {
+    if (!draftName.trim()) return;
+    updateUser({ ...user, name: draftName.trim() });
+    setEditing(false);
+    setFlash("تم حفظ الاسم ✓");
+    setTimeout(() => setFlash(""), 2000);
+  }
+
+  function changePassword() {
+    const current = prompt("كلمة المرور الحالية:");
+    if (current !== localStorage.getItem("masaar_pass")) { alert("كلمة المرور غير صحيحة"); return; }
+    const next = prompt("كلمة المرور الجديدة (6 أحرف على الأقل):");
+    if (!next || next.length < 6) { alert("كلمة المرور قصيرة جداً"); return; }
+    localStorage.setItem("masaar_pass", next);
+    setFlash("تم تغيير كلمة المرور ✓");
+    setTimeout(() => setFlash(""), 2000);
+  }
+
+  const field = { label: "", value: "" };
+  const inp = { width: "100%", padding: "12px 14px", border: `1.5px solid ${COLORS.navy}`, borderRadius: 10, fontSize: 15, fontFamily: "inherit", outline: "none", direction: "rtl", boxSizing: "border-box", color: "#111" };
+
+  return (
+    <div style={{ padding: `24px ${px}px ${isDesktop ? 40 : 80}px` }}>
+      {/* Avatar */}
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", marginBottom: 32, paddingTop: 8 }}>
+        <div style={{ width: 88, height: 88, background: COLORS.navy, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36, fontWeight: 700, color: COLORS.gold, marginBottom: 14 }}>
+          {user.name[0]}
+        </div>
+        <div style={{ fontSize: 20, fontWeight: 700, color: "#111" }}>{user.name}</div>
+        <div style={{ fontSize: 13, color: COLORS.gray, marginTop: 4 }}>{user.email}</div>
+      </div>
+
+      {flash && (
+        <div style={{ background: "#e8f5e9", color: "#2e7d32", borderRadius: 10, padding: "10px 14px", fontSize: 13, marginBottom: 16, textAlign: "center" }}>{flash}</div>
+      )}
+
+      {/* Name card */}
+      <Card style={{ marginBottom: 12 }}>
+        <div style={{ fontSize: 12, color: COLORS.gray, marginBottom: 6 }}>الاسم الكامل</div>
+        {editing ? (
+          <div style={{ display: "flex", gap: 8 }}>
+            <input value={draftName} onChange={e => setDraftName(e.target.value)} style={{ ...inp, flex: 1 }} autoFocus />
+            <button onClick={saveName} style={{ background: COLORS.navy, color: "white", border: "none", borderRadius: 8, padding: "0 16px", fontSize: 13, cursor: "pointer", fontFamily: "inherit", flexShrink: 0 }}>حفظ</button>
+            <button onClick={() => { setEditing(false); setDraftName(user.name); }} style={{ background: "#f3f4f6", color: COLORS.gray, border: "none", borderRadius: 8, padding: "0 12px", fontSize: 13, cursor: "pointer", fontFamily: "inherit", flexShrink: 0 }}>إلغاء</button>
+          </div>
+        ) : (
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <span style={{ fontSize: 15, color: "#111" }}>{user.name}</span>
+            <button onClick={() => setEditing(true)} style={{ background: COLORS.navyLight, color: COLORS.navy, border: "none", borderRadius: 8, padding: "5px 12px", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}>تعديل</button>
+          </div>
+        )}
+      </Card>
+
+      {/* Email card */}
+      <Card style={{ marginBottom: 12 }}>
+        <div style={{ fontSize: 12, color: COLORS.gray, marginBottom: 6 }}>البريد الإلكتروني</div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <span style={{ fontSize: 15, color: "#111", direction: "ltr" }}>{user.email}</span>
+          <span style={{ fontSize: 11, color: COLORS.gray }}>لا يمكن تغييره</span>
+        </div>
+      </Card>
+
+      {/* Password card */}
+      <Card style={{ marginBottom: 24 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div>
+            <div style={{ fontSize: 12, color: COLORS.gray, marginBottom: 2 }}>كلمة المرور</div>
+            <div style={{ fontSize: 15, color: "#111", letterSpacing: 3 }}>••••••</div>
+          </div>
+          <button onClick={changePassword} style={{ background: COLORS.navyLight, color: COLORS.navy, border: "none", borderRadius: 8, padding: "5px 12px", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}>تغيير</button>
+        </div>
+      </Card>
+
+      {/* Logout */}
+      <button onClick={logout} style={{ width: "100%", background: COLORS.redLight, color: COLORS.red, border: `1px solid ${COLORS.red}22`, borderRadius: 12, padding: "13px", fontSize: 15, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+        تسجيل الخروج
+      </button>
+    </div>
+  );
+}
+
 // ─── AUTH SCREEN ─────────────────────────────────────────────────────────────
 
 function AuthScreen({ onAuth }) {
@@ -1001,6 +1088,11 @@ export default function App() {
     setScreen("home");
   }
 
+  function updateUser(updated) {
+    localStorage.setItem("masaar_user", JSON.stringify(updated));
+    setUser(updated);
+  }
+
   const tabs = [
     { id: "home",        label: "الرئيسية",     icon: "🏠" },
     { id: "majors",      label: "التخصصات",     icon: "📚" },
@@ -1010,7 +1102,7 @@ export default function App() {
     { id: "dates",       label: "المواعيد",      icon: "📅" },
   ];
 
-  const screens = { home: HomeScreen, majors: MajorsScreen, dates: DatesScreen, scholarships: ScholarshipsScreen, aptitude: AptitudeScreen, gpa: GpaScreen };
+  const screens = { home: HomeScreen, majors: MajorsScreen, dates: DatesScreen, scholarships: ScholarshipsScreen, aptitude: AptitudeScreen, gpa: GpaScreen, profile: ProfileScreen };
   const ActiveScreen = screens[screen] || HomeScreen;
 
   return (
@@ -1035,13 +1127,13 @@ export default function App() {
             ))}
           </nav>
           <div style={{ padding: "16px 20px", borderTop: "1px solid rgba(255,255,255,.1)" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+            <button onClick={() => setScreen("profile")} style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", background: screen === "profile" ? "rgba(255,255,255,.1)" : "none", border: "none", borderRadius: 10, padding: "8px", cursor: "pointer", marginBottom: 8, textAlign: "right" }}>
               <div style={{ width: 34, height: 34, background: COLORS.gold, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, color: COLORS.navy, fontSize: 14, flexShrink: 0 }}>{user.name[0]}</div>
               <div style={{ minWidth: 0 }}>
                 <div style={{ color: "white", fontSize: 13, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.name}</div>
                 <div style={{ color: "rgba(255,255,255,.4)", fontSize: 11, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.email}</div>
               </div>
-            </div>
+            </button>
             <button onClick={logout} style={{ width: "100%", background: "rgba(255,255,255,.08)", border: "1px solid rgba(255,255,255,.12)", borderRadius: 8, padding: "7px 12px", color: "rgba(255,255,255,.6)", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}>تسجيل الخروج</button>
           </div>
         </aside>
@@ -1055,7 +1147,7 @@ export default function App() {
           <div style={{ background: COLORS.navy, padding: "14px 16px", display: "flex", alignItems: "center", gap: 10, position: "sticky", top: 0, zIndex: 10 }}>
             <button onClick={() => setScreen("home")} style={{ background: "rgba(255,255,255,.15)", border: "none", borderRadius: "50%", width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "white", fontSize: 16 }}>←</button>
             <MasaarIcon size={28} />
-            <span style={{ color: "white", fontWeight: 600, fontSize: 15 }}>{tabs.find(t => t.id === screen)?.label}</span>
+            <span style={{ color: "white", fontWeight: 600, fontSize: 15 }}>{tabs.find(t => t.id === screen)?.label ?? (screen === "profile" ? "الملف الشخصي" : "")}</span>
           </div>
         )}
 
@@ -1063,13 +1155,13 @@ export default function App() {
         {isDesktop && screen !== "home" && (
           <div style={{ background: "white", borderBottom: "1px solid #e5e7eb", padding: "14px 32px", display: "flex", alignItems: "center", gap: 12, position: "sticky", top: 0, zIndex: 10 }}>
             <button onClick={() => setScreen("home")} style={{ background: COLORS.navyLight, border: "none", borderRadius: 8, padding: "6px 12px", cursor: "pointer", color: COLORS.navy, fontSize: 13, fontFamily: "inherit" }}>← رئيسية</button>
-            <span style={{ fontSize: 18, fontWeight: 700, color: "#111" }}>{tabs.find(t => t.id === screen)?.label}</span>
+            <span style={{ fontSize: 18, fontWeight: 700, color: "#111" }}>{tabs.find(t => t.id === screen)?.label ?? (screen === "profile" ? "الملف الشخصي" : "")}</span>
           </div>
         )}
 
         {/* Screen content — centered & max-width capped on mobile/tablet */}
         <div style={{ flex: 1, width: "100%", maxWidth: isDesktop ? "none" : isTablet ? 600 : 480, margin: isDesktop ? 0 : "0 auto", paddingBottom: isDesktop ? 0 : 64 }}>
-          <ActiveScreen setScreen={setScreen} w={w} user={user} logout={logout} />
+          <ActiveScreen setScreen={setScreen} w={w} user={user} logout={logout} updateUser={updateUser} />
         </div>
 
         {/* Mobile / tablet bottom nav */}
