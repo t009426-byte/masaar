@@ -109,12 +109,11 @@ const INSTITUTIONS = [
 ];
 
 const DATES = [
-  { id: 1, title: "الاختبار الوطني", subtitle: "القدرات الأكاديمية - جامعة الكويت", date: "15 يوليو 2025", urgency: "high", icon: "📝", reg: "التسجيل: حتى 30 يونيو" },
-  { id: 2, title: "اختبار اللغة الإنجليزية", subtitle: "جامعة الكويت", date: "22 يوليو 2025", urgency: "med", icon: "🗣️", reg: "حجز الموعد عبر الموقع" },
-  { id: 3, title: "تقديم جامعة الكويت", subtitle: "بوابة القبول الإلكتروني", date: "1 أغسطس 2025", urgency: "low", icon: "🎓", reg: "do.ku.edu.kw" },
-  { id: 4, title: "تقديم الهيئة التطبيقية", subtitle: "PAAET - كليات ومعاهد", date: "10 أغسطس 2025", urgency: "low", icon: "🔧", reg: "e.paaet.edu.kw" },
-  { id: 5, title: "بعثات التعليم العالي", subtitle: "وزارة التعليم العالي - تقديم أولي", date: "15 سبتمبر 2025", urgency: "low", icon: "✈️", reg: "mohe.edu.kw" },
-  { id: 6, title: "تقديم الجامعات الخاصة", subtitle: "AUK / GUST / AUM وغيرها", date: "مستمر", urgency: "info", icon: "🏛️", reg: "مواقع الجامعات مباشرة" },
+  { id: 1, title: "البعثات الخارجية", subtitle: "وزارة التعليم العالي — التسجيل مفتوح الآن", date: "14 يونيو – 7 يوليو 2026", urgency: "high", icon: "✈️", reg: "mohe.edu.kw" },
+  { id: 2, title: "جامعة عبدالله السالم", subtitle: "استقبال طلبات التقديم", date: "2 – 15 يوليو 2026", urgency: "high", icon: "🎓", reg: "asu.edu.kw" },
+  { id: 3, title: "جامعة الكويت", subtitle: "بوابة القبول الإلكتروني", date: "18 – 28 يوليو 2026", urgency: "med", icon: "🏛️", reg: "do.ku.edu.kw" },
+  { id: 4, title: "بعثات الجامعات الخاصة", subtitle: "التسجيل لجامعات القطاع الخاص", date: "3 – 13 أغسطس 2026", urgency: "low", icon: "🏫", reg: "مواقع الجامعات مباشرة" },
+  { id: 5, title: "الهيئة التطبيقية والتدريب", subtitle: "PAAET — كليات ومعاهد", date: "5 – 18 أغسطس 2026", urgency: "low", icon: "🔧", reg: "e.paaet.edu.kw" },
 ];
 
 const SCHOLARSHIPS = [
