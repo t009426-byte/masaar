@@ -251,8 +251,8 @@ function Pill({ children, active, onClick }) {
   );
 }
 
-function Card({ children, style = {} }) {
-  return <div style={{ background: "white", border: "1px solid #e5e7eb", borderRadius: 12, padding: "14px 16px", ...style }}>{children}</div>;
+function Card({ children, style = {}, ...rest }) {
+  return <div style={{ background: "white", border: "1px solid #e5e7eb", borderRadius: 12, padding: "14px 16px", ...style }} {...rest}>{children}</div>;
 }
 
 // ─── SCREENS ─────────────────────────────────────────────────────────────────
@@ -735,6 +735,7 @@ function GpaScreen({ w = 480 }) {
   const [stream, setStream] = useState(null);
   const [grades, setGrades] = useState({});
   const [result, setResult] = useState(null);
+  const [expanded, setExpanded] = useState({});
 
   const subjects = stream ? SUBJECTS[stream] : [];
   const filled = subjects.filter(s => grades[s.id] !== undefined && grades[s.id] !== "");
@@ -814,14 +815,26 @@ function GpaScreen({ w = 480 }) {
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {qualifying.map((col, i) => (
-              <Card key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 12, fontWeight: 600, color: "#111" }}>{col.name}</div>
-                  <div style={{ fontSize: 11, color: COLORS.gray, marginTop: 1 }}>{col.instName}</div>
+              <Card key={i} style={{ cursor: col.majors?.length ? "pointer" : "default" }} onClick={() => col.majors?.length && setExpanded(e => ({ ...e, [i]: !e[i] }))}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: "#111" }}>{col.name}</div>
+                    <div style={{ fontSize: 11, color: COLORS.gray, marginTop: 1 }}>{col.instName}</div>
+                  </div>
+                  <span style={{ fontSize: 11, background: COLORS.greenLight, color: COLORS.green, padding: "2px 8px", borderRadius: 20, fontWeight: 600, flexShrink: 0 }}>
+                    حد {col.conditions.minScore}%
+                  </span>
+                  {col.majors?.length > 0 && (
+                    <span style={{ fontSize: 12, color: COLORS.gray, flexShrink: 0, transform: expanded[i] ? "rotate(180deg)" : "none", transition: "transform .15s" }}>▾</span>
+                  )}
                 </div>
-                <span style={{ fontSize: 11, background: COLORS.greenLight, color: COLORS.green, padding: "2px 8px", borderRadius: 20, fontWeight: 600, flexShrink: 0 }}>
-                  حد {col.conditions.minScore}%
-                </span>
+                {expanded[i] && col.majors?.length > 0 && (
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10, paddingTop: 10, borderTop: "1px solid #e5e7eb" }}>
+                    {col.majors.map((m, j) => (
+                      <span key={j} style={{ fontSize: 11, background: COLORS.navyLight, color: COLORS.navy, padding: "3px 10px", borderRadius: 20 }}>{m}</span>
+                    ))}
+                  </div>
+                )}
               </Card>
             ))}
           </div>
@@ -1051,6 +1064,9 @@ function ProfileScreen({ setScreen, w = 480, user, logout, updateUser }) {
               <button onClick={() => fileInputRef.current.click()} disabled={certBusy} style={{ flex: 1, background: COLORS.navyLight, color: COLORS.navy, border: "none", borderRadius: 8, padding: "9px", fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>استبدال</button>
               <button onClick={deleteCertificate} disabled={certBusy} style={{ flex: 1, background: COLORS.redLight, color: COLORS.red, border: "none", borderRadius: 8, padding: "9px", fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>حذف</button>
             </div>
+            <button onClick={() => setScreen("gpa")} style={{ width: "100%", background: COLORS.navy, color: "white", border: "none", borderRadius: 10, padding: "11px", fontSize: 13.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", marginTop: 10 }}>
+              🎯 عرض الكليات والتخصصات المتاحة بناءً على معدلك
+            </button>
           </div>
         ) : (
           <div>
