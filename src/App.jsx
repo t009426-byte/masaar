@@ -896,6 +896,23 @@ function ProfileScreen({ setScreen, w = 480, user, logout, updateUser }) {
   const [editing, setEditing] = useState(false);
   const [draftName, setDraftName] = useState(user.name);
   const [flash, setFlash] = useState("");
+  const [cert, setCert] = useState(null);
+  const [certLoading, setCertLoading] = useState(true);
+  const [certBusy, setCertBusy] = useState(false);
+  const [certError, setCertError] = useState("");
+  const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const { data, error } = await supabase.storage.from("certificates").list(user.id);
+      if (active) {
+        if (!error && data && data.length > 0) setCert(data[0]);
+        setCertLoading(false);
+      }
+    })();
+    return () => { active = false; };
+  }, [user.id]);
 
   function saveName() {
     if (!draftName.trim()) return;
@@ -912,6 +929,45 @@ function ProfileScreen({ setScreen, w = 480, user, logout, updateUser }) {
     if (error) { alert("حدث خطأ: " + error.message); return; }
     setFlash("تم تغيير كلمة المرور ✓");
     setTimeout(() => setFlash(""), 2000);
+  }
+
+  async function uploadCertificate(file) {
+    if (!file) return;
+    setCertError("");
+    const allowed = ["application/pdf", "image/png", "image/jpeg", "image/webp"];
+    if (!allowed.includes(file.type)) {
+      setCertError("الصيغة غير مدعومة — استخدم PDF أو JPG أو PNG");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setCertError("حجم الملف أكبر من 10 ميجابايت");
+      return;
+    }
+    setCertBusy(true);
+    if (cert) await supabase.storage.from("certificates").remove([`${user.id}/${cert.name}`]);
+    const ext = file.name.split(".").pop();
+    const path = `${user.id}/certificate.${ext}`;
+    const { error } = await supabase.storage.from("certificates").upload(path, file, { upsert: true });
+    setCertBusy(false);
+    if (error) { setCertError("فشل رفع الملف: " + error.message); return; }
+    const { data } = await supabase.storage.from("certificates").list(user.id);
+    setCert(data && data[0]);
+    setFlash("تم رفع الشهادة ✓");
+    setTimeout(() => setFlash(""), 2000);
+  }
+
+  async function viewCertificate() {
+    const { data, error } = await supabase.storage.from("certificates").createSignedUrl(`${user.id}/${cert.name}`, 60);
+    if (error) { setCertError("تعذر فتح الملف"); return; }
+    window.open(data.signedUrl, "_blank");
+  }
+
+  async function deleteCertificate() {
+    if (!confirm("حذف الشهادة المرفوعة؟")) return;
+    setCertBusy(true);
+    await supabase.storage.from("certificates").remove([`${user.id}/${cert.name}`]);
+    setCertBusy(false);
+    setCert(null);
   }
 
   const field = { label: "", value: "" };
@@ -967,6 +1023,46 @@ function ProfileScreen({ setScreen, w = 480, user, logout, updateUser }) {
           </div>
           <button onClick={changePassword} style={{ background: COLORS.navyLight, color: COLORS.navy, border: "none", borderRadius: 8, padding: "5px 12px", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}>تغيير</button>
         </div>
+      </Card>
+
+      {/* Certificate card */}
+      <Card style={{ marginBottom: 24 }}>
+        <div style={{ fontSize: 12, color: COLORS.gray, marginBottom: 10 }}>الشهادة الثانوية</div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".pdf,.png,.jpg,.jpeg,.webp"
+          style={{ display: "none" }}
+          onChange={e => uploadCertificate(e.target.files[0])}
+        />
+        {certLoading ? (
+          <div style={{ fontSize: 13, color: COLORS.gray }}>جارٍ التحقق…</div>
+        ) : cert ? (
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, overflow: "hidden" }}>
+                <span style={{ fontSize: 20 }}>📄</span>
+                <span style={{ fontSize: 13, color: "#111", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{cert.name}</span>
+              </div>
+              <Badge color="green">مرفوعة ✓</Badge>
+            </div>
+            <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+              <button onClick={viewCertificate} disabled={certBusy} style={{ flex: 1, background: COLORS.navyLight, color: COLORS.navy, border: "none", borderRadius: 8, padding: "9px", fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>عرض</button>
+              <button onClick={() => fileInputRef.current.click()} disabled={certBusy} style={{ flex: 1, background: COLORS.navyLight, color: COLORS.navy, border: "none", borderRadius: 8, padding: "9px", fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>استبدال</button>
+              <button onClick={deleteCertificate} disabled={certBusy} style={{ flex: 1, background: COLORS.redLight, color: COLORS.red, border: "none", borderRadius: 8, padding: "9px", fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>حذف</button>
+            </div>
+          </div>
+        ) : (
+          <div>
+            <div style={{ fontSize: 12.5, color: COLORS.gray, marginBottom: 10 }}>قم برفع صورة أو ملف PDF لشهادة الثانوية العامة (حد أقصى 10 ميجابايت)</div>
+            <button onClick={() => fileInputRef.current.click()} disabled={certBusy} style={{ width: "100%", background: COLORS.navy, color: "white", border: "none", borderRadius: 10, padding: "11px", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+              {certBusy ? "جارٍ الرفع…" : "📤 رفع الشهادة"}
+            </button>
+          </div>
+        )}
+        {certError && (
+          <div style={{ background: COLORS.redLight, color: COLORS.red, borderRadius: 8, padding: "8px 12px", fontSize: 12.5, marginTop: 10 }}>{certError}</div>
+        )}
       </Card>
 
       {/* Logout */}
