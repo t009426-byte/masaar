@@ -728,77 +728,110 @@ function AptitudeScreen({ w = 480 }) {
 
 // ─── GPA SCREEN ──────────────────────────────────────────────────────────────
 
-function GpaScreen({ w = 480 }) {
+function GpaScreen({ w = 480, user }) {
   const isDesktop = w >= 1024;
   const px = isDesktop ? 32 : 16;
 
-  const [stream, setStream] = useState(null);
-  const [grades, setGrades] = useState({});
-  const [result, setResult] = useState(null);
-  const [expanded, setExpanded] = useState({});
+  const [method, setMethod]       = useState(null);
+  const [stream, setStream]       = useState(null);
+  const [grades, setGrades]       = useState({});
+  const [result, setResult]       = useState(null);
+  const [expanded, setExpanded]   = useState({});
+  const [score, setScore]         = useState("");
+  const [cert, setCert]           = useState(null);
+  const [certLoading, setCertLoading] = useState(false);
+  const [certBusy, setCertBusy]   = useState(false);
+  const [certError, setCertError] = useState("");
+  const fileInputRef = useRef(null);
 
-  const subjects = stream ? SUBJECTS[stream] : [];
-  const filled = subjects.filter(s => grades[s.id] !== undefined && grades[s.id] !== "");
-  const liveAvg = filled.length ? filled.reduce((a, s) => a + Number(grades[s.id]), 0) / filled.length : null;
-  const allFilled = subjects.length > 0 && subjects.every(s => {
-    const v = grades[s.id]; return v !== undefined && v !== "" && Number(v) >= 0 && Number(v) <= 100;
-  });
+  useEffect(() => {
+    if (method !== "upload" || !user) return;
+    let active = true;
+    setCertLoading(true);
+    (async () => {
+      const { data } = await supabase.storage.from("certificates").list(user.id);
+      if (active) { setCert(data?.[0] ?? null); setCertLoading(false); }
+    })();
+    return () => { active = false; };
+  }, [method, user?.id]);
 
-  const calculate = () => {
-    const avg = subjects.reduce((a, s) => a + Number(grades[s.id]), 0) / subjects.length;
-    setResult(avg);
-  };
+  async function uploadCertificate(file) {
+    if (!file) return;
+    setCertError("");
+    const allowed = ["application/pdf", "image/png", "image/jpeg", "image/webp"];
+    if (!allowed.includes(file.type)) { setCertError("الصيغة غير مدعومة — استخدم PDF أو JPG أو PNG"); return; }
+    if (file.size > 10 * 1024 * 1024) { setCertError("حجم الملف أكبر من 10 ميجابايت"); return; }
+    setCertBusy(true);
+    if (cert) await supabase.storage.from("certificates").remove([`${user.id}/${cert.name}`]);
+    const ext = file.name.split(".").pop();
+    const { error } = await supabase.storage.from("certificates").upload(`${user.id}/certificate.${ext}`, file, { upsert: true });
+    setCertBusy(false);
+    if (error) { setCertError("فشل رفع الملف: " + error.message); return; }
+    const { data } = await supabase.storage.from("certificates").list(user.id);
+    setCert(data?.[0] ?? null);
+  }
 
-  const reset = () => { setResult(null); setGrades({}); setStream(null); };
+  async function viewCertificate() {
+    const { data, error } = await supabase.storage.from("certificates").createSignedUrl(`${user.id}/${cert.name}`, 60);
+    if (error) { setCertError("تعذر فتح الملف"); return; }
+    window.open(data.signedUrl, "_blank");
+  }
 
-  // ── Stream picker ──
-  if (!stream) return (
+  async function deleteCertificate() {
+    if (!confirm("حذف الشهادة المرفوعة؟")) return;
+    setCertBusy(true);
+    await supabase.storage.from("certificates").remove([`${user.id}/${cert.name}`]);
+    setCertBusy(false);
+    setCert(null);
+  }
+
+  const subjects  = stream ? SUBJECTS[stream] : [];
+  const filled    = subjects.filter(s => grades[s.id] !== undefined && grades[s.id] !== "");
+  const liveAvg   = filled.length ? filled.reduce((a, s) => a + Number(grades[s.id]), 0) / filled.length : null;
+  const allFilled = subjects.length > 0 && subjects.every(s => { const v = grades[s.id]; return v !== undefined && v !== "" && Number(v) >= 0 && Number(v) <= 100; });
+  const calculate = () => setResult(subjects.reduce((a, s) => a + Number(grades[s.id]), 0) / subjects.length);
+  const reset     = () => { setResult(null); setGrades({}); setStream(null); setMethod(null); setScore(""); setCert(null); setCertError(""); setExpanded({}); };
+
+  const STREAM_OPTS = [
+    { id: "sci",  icon: "🔬", label: "الفرع العلمي",  desc: "فيزياء · كيمياء · أحياء · رياضيات" },
+    { id: "arts", icon: "📚", label: "الفرع الأدبي",  desc: "تاريخ · جغرافيا · اقتصاد · رياضيات" },
+  ];
+
+  // ── Method picker ──
+  if (!method) return (
     <div style={{ padding: `24px ${px}px ${isDesktop ? 40 : 80}px` }}>
       <div style={{ fontSize: 18, fontWeight: 700, color: "#111", marginBottom: 6 }}>حاسبة المعدل والقبول</div>
-      <div style={{ fontSize: 13, color: COLORS.gray, marginBottom: 24 }}>اختر فرعك الدراسي لإدخال درجاتك</div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 24 }}>
+      <div style={{ fontSize: 13, color: COLORS.gray, marginBottom: 24 }}>كيف تريد إدخال درجاتك؟</div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
         {[
-          { id: "sci",  icon: "🔬", label: "الفرع العلمي",  desc: "فيزياء · كيمياء · أحياء · رياضيات" },
-          { id: "arts", icon: "📚", label: "الفرع الأدبي",  desc: "تاريخ · جغرافيا · اقتصاد · رياضيات" },
-        ].map(s => (
-          <button key={s.id} onClick={() => setStream(s.id)} style={{ background: "white", border: "2px solid #e5e7eb", borderRadius: 16, padding: "28px 12px", display: "flex", flexDirection: "column", alignItems: "center", gap: 10, cursor: "pointer", fontFamily: "inherit" }}>
-            <span style={{ fontSize: 40 }}>{s.icon}</span>
-            <span style={{ fontSize: 14, fontWeight: 700, color: "#111" }}>{s.label}</span>
-            <span style={{ fontSize: 11, color: COLORS.gray, textAlign: "center", lineHeight: 1.5 }}>{s.desc}</span>
+          { id: "manual", icon: "✏️", label: "إدخال الدرجات", desc: "أدخل درجتك في كل مادة بشكل منفصل" },
+          { id: "upload", icon: "📄", label: "رفع الشهادة",   desc: "ارفع شهادتك وأدخل معدلك الإجمالي مباشرة" },
+        ].map(m => (
+          <button key={m.id} onClick={() => setMethod(m.id)} style={{ background: "white", border: "2px solid #e5e7eb", borderRadius: 16, padding: "28px 12px", display: "flex", flexDirection: "column", alignItems: "center", gap: 10, cursor: "pointer", fontFamily: "inherit" }}>
+            <span style={{ fontSize: 40 }}>{m.icon}</span>
+            <span style={{ fontSize: 14, fontWeight: 700, color: "#111" }}>{m.label}</span>
+            <span style={{ fontSize: 11, color: COLORS.gray, textAlign: "center", lineHeight: 1.5 }}>{m.desc}</span>
           </button>
         ))}
       </div>
-      <Card style={{ background: COLORS.navyLight, border: `1px solid ${COLORS.navy}20` }}>
-        <div style={{ fontSize: 12, color: COLORS.navy, lineHeight: 1.8 }}>
-          📌 أدخل درجاتك في كل مادة من 100 وسيحسب التطبيق معدلك ويعرض الكليات التي تنطبق عليها شروط قبولها.
-        </div>
-      </Card>
     </div>
   );
 
-  // ── Result ──
+  // ── Shared result screen ──
   if (result !== null) {
     const gpa = toGPA(result);
     const lbl = gradeLabel(result);
     const heroColor = result >= 80 ? COLORS.green : result >= 65 ? COLORS.navy : COLORS.red;
-
     const qualifying = INSTITUTIONS.flatMap(inst =>
       inst.colleges
-        .filter(col => {
-          if (!col.conditions) return false;
-          if (stream === "arts" && col.stream === "sci") return false;
-          return col.conditions.minScore <= result;
-        })
+        .filter(col => { if (!col.conditions) return false; if (stream === "arts" && col.stream === "sci") return false; return col.conditions.minScore <= result; })
         .map(col => ({ ...col, instName: inst.name }))
     ).sort((a, b) => b.conditions.minScore - a.conditions.minScore);
 
     return (
       <div style={{ padding: `16px ${px}px ${isDesktop ? 40 : 80}px` }}>
-        {/* Score hero */}
         <div style={{ background: `linear-gradient(135deg, ${heroColor}, ${heroColor}cc)`, borderRadius: 16, padding: "28px 20px", textAlign: "center", color: "white", marginBottom: 20 }}>
-          <div style={{ fontSize: 12, color: "rgba(255,255,255,.7)", marginBottom: 6 }}>
-            {stream === "sci" ? "🔬 الفرع العلمي" : "📚 الفرع الأدبي"} · نتيجتك
-          </div>
+          <div style={{ fontSize: 12, color: "rgba(255,255,255,.7)", marginBottom: 6 }}>{stream === "sci" ? "🔬 الفرع العلمي" : "📚 الفرع الأدبي"} · نتيجتك</div>
           <div style={{ fontSize: 60, fontWeight: 800, lineHeight: 1, color: "white" }}>{result.toFixed(1)}<span style={{ fontSize: 24 }}>%</span></div>
           <div style={{ fontSize: 15, color: "rgba(255,255,255,.85)", margin: "8px 0 16px" }}>{lbl}</div>
           <div style={{ display: "inline-flex", alignItems: "center", gap: 10, background: "rgba(255,255,255,.18)", borderRadius: 20, padding: "8px 20px" }}>
@@ -807,12 +840,8 @@ function GpaScreen({ w = 480 }) {
             <span style={{ fontSize: 12, color: "rgba(255,255,255,.6)" }}>/ 4.0</span>
           </div>
         </div>
-
-        {/* Qualifying */}
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.green, marginBottom: 10 }}>
-            ✅ الكليات المتاحة لك — {qualifying.length} كلية
-          </div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.green, marginBottom: 10 }}>✅ الكليات المتاحة لك — {qualifying.length} كلية</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {qualifying.map((col, i) => (
               <Card key={i} style={{ cursor: col.majors?.length ? "pointer" : "default" }} onClick={() => col.majors?.length && setExpanded(e => ({ ...e, [i]: !e[i] }))}>
@@ -821,33 +850,117 @@ function GpaScreen({ w = 480 }) {
                     <div style={{ fontSize: 12, fontWeight: 600, color: "#111" }}>{col.name}</div>
                     <div style={{ fontSize: 11, color: COLORS.gray, marginTop: 1 }}>{col.instName}</div>
                   </div>
-                  <span style={{ fontSize: 11, background: COLORS.greenLight, color: COLORS.green, padding: "2px 8px", borderRadius: 20, fontWeight: 600, flexShrink: 0 }}>
-                    حد {col.conditions.minScore}%
-                  </span>
-                  {col.majors?.length > 0 && (
-                    <span style={{ fontSize: 12, color: COLORS.gray, flexShrink: 0, transform: expanded[i] ? "rotate(180deg)" : "none", transition: "transform .15s" }}>▾</span>
-                  )}
+                  <span style={{ fontSize: 11, background: COLORS.greenLight, color: COLORS.green, padding: "2px 8px", borderRadius: 20, fontWeight: 600, flexShrink: 0 }}>حد {col.conditions.minScore}%</span>
+                  {col.majors?.length > 0 && <span style={{ fontSize: 12, color: COLORS.gray, flexShrink: 0, transform: expanded[i] ? "rotate(180deg)" : "none", transition: "transform .15s" }}>▾</span>}
                 </div>
                 {expanded[i] && col.majors?.length > 0 && (
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10, paddingTop: 10, borderTop: "1px solid #e5e7eb" }}>
-                    {col.majors.map((m, j) => (
-                      <span key={j} style={{ fontSize: 11, background: COLORS.navyLight, color: COLORS.navy, padding: "3px 10px", borderRadius: 20 }}>{m}</span>
-                    ))}
+                    {col.majors.map((m, j) => <span key={j} style={{ fontSize: 11, background: COLORS.navyLight, color: COLORS.navy, padding: "3px 10px", borderRadius: 20 }}>{m}</span>)}
                   </div>
                 )}
               </Card>
             ))}
           </div>
         </div>
+        <button onClick={reset} style={{ width: "100%", background: "white", border: `1px solid ${COLORS.navy}`, color: COLORS.navy, borderRadius: 12, padding: "12px", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>احسب مجدداً</button>
+      </div>
+    );
+  }
 
-        <button onClick={reset} style={{ width: "100%", background: "white", border: `1px solid ${COLORS.navy}`, color: COLORS.navy, borderRadius: 12, padding: "12px", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-          احسب مجدداً
+  // ── Upload form ──
+  if (method === "upload") {
+    const scoreNum   = Number(score);
+    const scoreValid = score !== "" && scoreNum >= 0 && scoreNum <= 100;
+    const canSubmit  = scoreValid && !!stream;
+    return (
+      <div style={{ padding: `16px ${px}px ${isDesktop ? 40 : 80}px` }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+          <button onClick={() => { setMethod(null); setStream(null); }} style={{ background: COLORS.navyLight, border: "none", borderRadius: 8, padding: "6px 12px", cursor: "pointer", color: COLORS.navy, fontSize: 13, fontFamily: "inherit" }}>← رجوع</button>
+          <span style={{ fontSize: 15, fontWeight: 700, color: "#111" }}>رفع الشهادة الثانوية</span>
+        </div>
+
+        {/* File upload card */}
+        <Card style={{ marginBottom: 14 }}>
+          <div style={{ fontSize: 12, color: COLORS.gray, marginBottom: 10 }}>الشهادة الثانوية</div>
+          <input ref={fileInputRef} type="file" accept=".pdf,.png,.jpg,.jpeg,.webp" style={{ display: "none" }} onChange={e => uploadCertificate(e.target.files[0])} />
+          {certLoading ? (
+            <div style={{ fontSize: 13, color: COLORS.gray }}>جارٍ التحقق…</div>
+          ) : cert ? (
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, overflow: "hidden" }}>
+                  <span style={{ fontSize: 20 }}>📄</span>
+                  <span style={{ fontSize: 13, color: "#111", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{cert.name}</span>
+                </div>
+                <Badge color="green">مرفوعة ✓</Badge>
+              </div>
+              <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+                <button onClick={viewCertificate} disabled={certBusy} style={{ flex: 1, background: COLORS.navyLight, color: COLORS.navy, border: "none", borderRadius: 8, padding: "9px", fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>عرض</button>
+                <button onClick={() => fileInputRef.current.click()} disabled={certBusy} style={{ flex: 1, background: COLORS.navyLight, color: COLORS.navy, border: "none", borderRadius: 8, padding: "9px", fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>استبدال</button>
+                <button onClick={deleteCertificate} disabled={certBusy} style={{ flex: 1, background: COLORS.redLight, color: COLORS.red, border: "none", borderRadius: 8, padding: "9px", fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>حذف</button>
+              </div>
+            </div>
+          ) : (
+            <button onClick={() => fileInputRef.current.click()} disabled={certBusy} style={{ width: "100%", background: COLORS.navy, color: "white", border: "none", borderRadius: 10, padding: "11px", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+              {certBusy ? "جارٍ الرفع…" : "📤 رفع الشهادة"}
+            </button>
+          )}
+          {certError && <div style={{ background: COLORS.redLight, color: COLORS.red, borderRadius: 8, padding: "8px 12px", fontSize: 12.5, marginTop: 10 }}>{certError}</div>}
+        </Card>
+
+        {/* Stream picker */}
+        <Card style={{ marginBottom: 14 }}>
+          <div style={{ fontSize: 12, color: COLORS.gray, marginBottom: 10 }}>الفرع الدراسي</div>
+          <div style={{ display: "flex", gap: 8 }}>
+            {STREAM_OPTS.map(s => (
+              <button key={s.id} onClick={() => setStream(s.id)} style={{ flex: 1, background: stream === s.id ? COLORS.navy : "#f3f4f6", color: stream === s.id ? "white" : "#111", border: "none", borderRadius: 10, padding: "10px", fontSize: 13, fontWeight: stream === s.id ? 600 : 400, cursor: "pointer", fontFamily: "inherit" }}>
+                {s.icon} {s.label}
+              </button>
+            ))}
+          </div>
+        </Card>
+
+        {/* Score input */}
+        <Card style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 12, color: COLORS.gray, marginBottom: 8 }}>معدلك الإجمالي (من 100)</div>
+          <input
+            type="number" min="0" max="100" inputMode="decimal" value={score}
+            onChange={e => setScore(e.target.value)} placeholder="مثال: 87.5"
+            style={{ width: "100%", padding: "12px 14px", border: `1.5px solid ${scoreValid ? COLORS.navy + "60" : "#e5e7eb"}`, borderRadius: 10, fontSize: 22, fontWeight: 700, textAlign: "center", color: scoreValid ? (scoreNum >= 80 ? COLORS.green : scoreNum >= 65 ? COLORS.navy : COLORS.red) : "#111", outline: "none", fontFamily: "inherit", boxSizing: "border-box", direction: "ltr" }}
+          />
+        </Card>
+
+        <button onClick={() => setResult(scoreNum)} disabled={!canSubmit} style={{ width: "100%", background: canSubmit ? COLORS.navy : "#e5e7eb", color: canSubmit ? "white" : COLORS.gray, border: "none", borderRadius: 12, padding: "14px", fontSize: 15, fontWeight: 700, cursor: canSubmit ? "pointer" : "not-allowed", fontFamily: "inherit" }}>
+          {!stream ? "اختر الفرع الدراسي أولاً" : !scoreValid ? "أدخل معدلك الإجمالي" : "عرض الكليات المتاحة ←"}
         </button>
       </div>
     );
   }
 
-  // ── Grade inputs ──
+  // ── Manual: Stream picker ──
+  if (!stream) return (
+    <div style={{ padding: `24px ${px}px ${isDesktop ? 40 : 80}px` }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 20 }}>
+        <button onClick={() => setMethod(null)} style={{ background: COLORS.navyLight, border: "none", borderRadius: 8, padding: "6px 12px", cursor: "pointer", color: COLORS.navy, fontSize: 13, fontFamily: "inherit" }}>← رجوع</button>
+        <span style={{ fontSize: 15, fontWeight: 700, color: "#111" }}>إدخال الدرجات</span>
+      </div>
+      <div style={{ fontSize: 13, color: COLORS.gray, marginBottom: 20 }}>اختر فرعك الدراسي</div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 24 }}>
+        {STREAM_OPTS.map(s => (
+          <button key={s.id} onClick={() => setStream(s.id)} style={{ background: "white", border: "2px solid #e5e7eb", borderRadius: 16, padding: "28px 12px", display: "flex", flexDirection: "column", alignItems: "center", gap: 10, cursor: "pointer", fontFamily: "inherit" }}>
+            <span style={{ fontSize: 40 }}>{s.icon}</span>
+            <span style={{ fontSize: 14, fontWeight: 700, color: "#111" }}>{s.label}</span>
+            <span style={{ fontSize: 11, color: COLORS.gray, textAlign: "center", lineHeight: 1.5 }}>{s.desc}</span>
+          </button>
+        ))}
+      </div>
+      <Card style={{ background: COLORS.navyLight, border: `1px solid ${COLORS.navy}20` }}>
+        <div style={{ fontSize: 12, color: COLORS.navy, lineHeight: 1.8 }}>📌 أدخل درجاتك في كل مادة من 100 وسيحسب التطبيق معدلك ويعرض الكليات التي تنطبق عليها شروط قبولها.</div>
+      </Card>
+    </div>
+  );
+
+  // ── Manual: Grade inputs ──
   return (
     <div style={{ padding: `16px ${px}px ${isDesktop ? 40 : 80}px` }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
@@ -855,7 +968,6 @@ function GpaScreen({ w = 480 }) {
         <span style={{ fontSize: 15, fontWeight: 700, color: "#111" }}>{stream === "sci" ? "🔬 الفرع العلمي" : "📚 الفرع الأدبي"}</span>
       </div>
 
-      {/* Live average bar */}
       {liveAvg !== null && (
         <div style={{ background: "white", border: "1px solid #e5e7eb", borderRadius: 12, padding: "12px 16px", marginBottom: 14, display: "flex", alignItems: "center", gap: 14 }}>
           <div style={{ flex: 1 }}>
@@ -864,9 +976,7 @@ function GpaScreen({ w = 480 }) {
               <div style={{ background: liveAvg >= 80 ? COLORS.green : liveAvg >= 65 ? COLORS.navy : COLORS.red, width: `${Math.min(liveAvg, 100)}%`, height: "100%", borderRadius: 20, transition: "width .3s, background .3s" }} />
             </div>
           </div>
-          <div style={{ fontSize: 24, fontWeight: 800, color: liveAvg >= 80 ? COLORS.green : liveAvg >= 65 ? COLORS.navy : COLORS.red, minWidth: 56, textAlign: "center" }}>
-            {liveAvg.toFixed(1)}%
-          </div>
+          <div style={{ fontSize: 24, fontWeight: 800, color: liveAvg >= 80 ? COLORS.green : liveAvg >= 65 ? COLORS.navy : COLORS.red, minWidth: 56, textAlign: "center" }}>{liveAvg.toFixed(1)}%</div>
         </div>
       )}
 
@@ -880,10 +990,7 @@ function GpaScreen({ w = 480 }) {
           return (
             <div key={s.id} style={{ background: "white", border: "1px solid #e5e7eb", borderRadius: 10, padding: "10px 14px", display: "flex", alignItems: "center", gap: 12 }}>
               <span style={{ flex: 1, fontSize: 13, color: "#111" }}>{s.label}</span>
-              <input
-                type="number" min="0" max="100" inputMode="numeric" value={val}
-                onChange={e => setGrades(g => ({ ...g, [s.id]: e.target.value }))}
-                placeholder="–"
+              <input type="number" min="0" max="100" inputMode="numeric" value={val} onChange={e => setGrades(g => ({ ...g, [s.id]: e.target.value }))} placeholder="–"
                 style={{ width: 68, padding: "7px 8px", border: `1.5px solid ${valid ? scoreColor + "60" : "#e5e7eb"}`, borderRadius: 8, fontSize: 16, fontWeight: 700, textAlign: "center", color: scoreColor, background: scoreBg, outline: "none", fontFamily: "inherit" }}
               />
             </div>
@@ -891,10 +998,8 @@ function GpaScreen({ w = 480 }) {
         })}
       </div>
 
-      <button
-        onClick={calculate} disabled={!allFilled}
-        style={{ width: "100%", background: allFilled ? COLORS.navy : "#e5e7eb", color: allFilled ? "white" : COLORS.gray, border: "none", borderRadius: 12, padding: "14px", fontSize: 15, fontWeight: 700, cursor: allFilled ? "pointer" : "not-allowed", fontFamily: "inherit", transition: "background .2s" }}
-      >
+      <button onClick={calculate} disabled={!allFilled}
+        style={{ width: "100%", background: allFilled ? COLORS.navy : "#e5e7eb", color: allFilled ? "white" : COLORS.gray, border: "none", borderRadius: 12, padding: "14px", fontSize: 15, fontWeight: 700, cursor: allFilled ? "pointer" : "not-allowed", fontFamily: "inherit", transition: "background .2s" }}>
         {allFilled ? "احسب المعدل ←" : `أدخل جميع الدرجات (${filled.length} / ${subjects.length})`}
       </button>
     </div>
@@ -909,23 +1014,6 @@ function ProfileScreen({ setScreen, w = 480, user, logout, updateUser }) {
   const [editing, setEditing] = useState(false);
   const [draftName, setDraftName] = useState(user.name);
   const [flash, setFlash] = useState("");
-  const [cert, setCert] = useState(null);
-  const [certLoading, setCertLoading] = useState(true);
-  const [certBusy, setCertBusy] = useState(false);
-  const [certError, setCertError] = useState("");
-  const fileInputRef = useRef(null);
-
-  useEffect(() => {
-    let active = true;
-    (async () => {
-      const { data, error } = await supabase.storage.from("certificates").list(user.id);
-      if (active) {
-        if (!error && data && data.length > 0) setCert(data[0]);
-        setCertLoading(false);
-      }
-    })();
-    return () => { active = false; };
-  }, [user.id]);
 
   function saveName() {
     if (!draftName.trim()) return;
@@ -944,46 +1032,6 @@ function ProfileScreen({ setScreen, w = 480, user, logout, updateUser }) {
     setTimeout(() => setFlash(""), 2000);
   }
 
-  async function uploadCertificate(file) {
-    if (!file) return;
-    setCertError("");
-    const allowed = ["application/pdf", "image/png", "image/jpeg", "image/webp"];
-    if (!allowed.includes(file.type)) {
-      setCertError("الصيغة غير مدعومة — استخدم PDF أو JPG أو PNG");
-      return;
-    }
-    if (file.size > 10 * 1024 * 1024) {
-      setCertError("حجم الملف أكبر من 10 ميجابايت");
-      return;
-    }
-    setCertBusy(true);
-    if (cert) await supabase.storage.from("certificates").remove([`${user.id}/${cert.name}`]);
-    const ext = file.name.split(".").pop();
-    const path = `${user.id}/certificate.${ext}`;
-    const { error } = await supabase.storage.from("certificates").upload(path, file, { upsert: true });
-    setCertBusy(false);
-    if (error) { setCertError("فشل رفع الملف: " + error.message); return; }
-    const { data } = await supabase.storage.from("certificates").list(user.id);
-    setCert(data && data[0]);
-    setFlash("تم رفع الشهادة ✓");
-    setTimeout(() => setFlash(""), 2000);
-  }
-
-  async function viewCertificate() {
-    const { data, error } = await supabase.storage.from("certificates").createSignedUrl(`${user.id}/${cert.name}`, 60);
-    if (error) { setCertError("تعذر فتح الملف"); return; }
-    window.open(data.signedUrl, "_blank");
-  }
-
-  async function deleteCertificate() {
-    if (!confirm("حذف الشهادة المرفوعة؟")) return;
-    setCertBusy(true);
-    await supabase.storage.from("certificates").remove([`${user.id}/${cert.name}`]);
-    setCertBusy(false);
-    setCert(null);
-  }
-
-  const field = { label: "", value: "" };
   const inp = { width: "100%", padding: "12px 14px", border: `1.5px solid ${COLORS.navy}`, borderRadius: 10, fontSize: 15, fontFamily: "inherit", outline: "none", direction: "rtl", boxSizing: "border-box", color: "#111" };
 
   return (
@@ -1028,7 +1076,7 @@ function ProfileScreen({ setScreen, w = 480, user, logout, updateUser }) {
       </Card>
 
       {/* Password card */}
-      <Card style={{ marginBottom: 24 }}>
+      <Card style={{ marginBottom: 20 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div>
             <div style={{ fontSize: 12, color: COLORS.gray, marginBottom: 2 }}>كلمة المرور</div>
@@ -1036,49 +1084,6 @@ function ProfileScreen({ setScreen, w = 480, user, logout, updateUser }) {
           </div>
           <button onClick={changePassword} style={{ background: COLORS.navyLight, color: COLORS.navy, border: "none", borderRadius: 8, padding: "5px 12px", fontSize: 12, cursor: "pointer", fontFamily: "inherit" }}>تغيير</button>
         </div>
-      </Card>
-
-      {/* Certificate card */}
-      <Card style={{ marginBottom: 24 }}>
-        <div style={{ fontSize: 12, color: COLORS.gray, marginBottom: 10 }}>الشهادة الثانوية</div>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".pdf,.png,.jpg,.jpeg,.webp"
-          style={{ display: "none" }}
-          onChange={e => uploadCertificate(e.target.files[0])}
-        />
-        {certLoading ? (
-          <div style={{ fontSize: 13, color: COLORS.gray }}>جارٍ التحقق…</div>
-        ) : cert ? (
-          <div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, overflow: "hidden" }}>
-                <span style={{ fontSize: 20 }}>📄</span>
-                <span style={{ fontSize: 13, color: "#111", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{cert.name}</span>
-              </div>
-              <Badge color="green">مرفوعة ✓</Badge>
-            </div>
-            <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-              <button onClick={viewCertificate} disabled={certBusy} style={{ flex: 1, background: COLORS.navyLight, color: COLORS.navy, border: "none", borderRadius: 8, padding: "9px", fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>عرض</button>
-              <button onClick={() => fileInputRef.current.click()} disabled={certBusy} style={{ flex: 1, background: COLORS.navyLight, color: COLORS.navy, border: "none", borderRadius: 8, padding: "9px", fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>استبدال</button>
-              <button onClick={deleteCertificate} disabled={certBusy} style={{ flex: 1, background: COLORS.redLight, color: COLORS.red, border: "none", borderRadius: 8, padding: "9px", fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>حذف</button>
-            </div>
-            <button onClick={() => setScreen("gpa")} style={{ width: "100%", background: COLORS.navy, color: "white", border: "none", borderRadius: 10, padding: "11px", fontSize: 13.5, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", marginTop: 10 }}>
-              🎯 عرض الكليات والتخصصات المتاحة بناءً على معدلك
-            </button>
-          </div>
-        ) : (
-          <div>
-            <div style={{ fontSize: 12.5, color: COLORS.gray, marginBottom: 10 }}>قم برفع صورة أو ملف PDF لشهادة الثانوية العامة (حد أقصى 10 ميجابايت)</div>
-            <button onClick={() => fileInputRef.current.click()} disabled={certBusy} style={{ width: "100%", background: COLORS.navy, color: "white", border: "none", borderRadius: 10, padding: "11px", fontSize: 14, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
-              {certBusy ? "جارٍ الرفع…" : "📤 رفع الشهادة"}
-            </button>
-          </div>
-        )}
-        {certError && (
-          <div style={{ background: COLORS.redLight, color: COLORS.red, borderRadius: 8, padding: "8px 12px", fontSize: 12.5, marginTop: 10 }}>{certError}</div>
-        )}
       </Card>
 
       {/* Logout */}
