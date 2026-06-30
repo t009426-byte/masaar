@@ -1116,8 +1116,8 @@ function AuthScreen({ onAuth }) {
           return setError("تجاوزت الحد المسموح — انتظر قليلاً ثم حاول مجدداً");
         return setError(error.message);
       }
-      if (data.user) onAuth(normalizeUser(data.user));
-      else setError("تحقق من بريدك الإلكتروني لتأكيد الحساب");
+      if (data.session) onAuth(normalizeUser(data.user));
+      else setError("أُرسل رابط التأكيد — تحقق من بريدك الإلكتروني ثم سجّل دخولك");
     } else {
       const { data, error } = await supabase.auth.signInWithPassword({
         email: email.trim().toLowerCase(),
