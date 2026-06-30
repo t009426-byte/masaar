@@ -158,12 +158,18 @@ const APTITUDE_QUESTIONS = [
 const RIASEC_LABELS = { R: "Realistic", I: "Investigative", A: "Artistic", S: "Social", E: "Enterprising", C: "Conventional" };
 
 const APTITUDE_RESULTS = {
-  R: { code: "R", title: "العملي التقني", emoji: "🔧", desc: "تميل نحو الأعمال العملية والتقنية. تفضل العمل بيديك وتجد متعة في حل المشكلات الهندسية والتقنية الملموسة. البيئة المثالية لك هي الورش والمختبرات والمواقع الهندسية.", recs: ["كلية الهندسة والبترول - جامعة الكويت", "كلية الدراسات التكنولوجية - PAAET", "كلية الهندسة والتكنولوجيا - AUM", "كلية الهندسة والتكنولوجيا - ACK"] },
-  I: { code: "I", title: "الباحث المحلل", emoji: "🔬", desc: "تتميز بالتفكير التحليلي والفضول العلمي. تحب البحث والتجريب وتسعى دائماً لفهم الأشياء بعمق. تنجذب للمسائل المعقدة التي تحتاج تفكيراً نقدياً.", recs: ["كلية العلوم - جامعة الكويت", "كلية الطب - جامعة الكويت", "كلية الصيدلة - جامعة الكويت", "كلية العلوم الحياتية - KU"] },
-  A: { code: "A", title: "المبدع الفني", emoji: "🎨", desc: "تمتلك روحاً إبداعية وتعبيرية. تنجذب نحو الفن والتصميم والأدب والإعلام. تزدهر في البيئات المرنة التي تتيح لك التعبير الحر والابتكار.", recs: ["كلية العمارة - جامعة الكويت", "كلية الآداب - جامعة الكويت", "كلية الفنون والعلوم الإنسانية - AUK", "كلية الفنون والعلوم - GUST"] },
-  S: { code: "S", title: "الاجتماعي المساعد", emoji: "🤝", desc: "لديك دافع قوي لمساعدة الآخرين والتأثير فيهم إيجاباً. بيئتك المثالية هي العمل مع الناس في مجالات التعليم والصحة والخدمة الاجتماعية.", recs: ["كلية التربية - جامعة الكويت", "كلية العلوم الاجتماعية - KU", "كلية التمريض - PAAET", "كلية التربية الأساسية - PAAET"] },
-  E: { code: "E", title: "القائد الريادي", emoji: "📊", desc: "تمتلك قدرات قيادية وإقناعية قوية. تنجذب نحو الأعمال وريادة المشاريع وتحب التأثير في الآخرين وتحقيق الأهداف التجارية.", recs: ["كلية العلوم الإدارية - جامعة الكويت", "كلية الأعمال والاقتصاد - AUK", "كلية الأعمال والإدارة - GUST", "كلية الحقوق - جامعة الكويت"] },
-  C: { code: "C", title: "المنظم الدقيق", emoji: "📋", desc: "تتميز بالدقة والتنظيم والانتباه للتفاصيل. تنجح في البيئات المنظمة وتجيد العمل مع الأرقام والبيانات والأنظمة والإجراءات الواضحة.", recs: ["المحاسبة / نظم المعلومات - كلية العلوم الإدارية KU", "كلية الدراسات التجارية - PAAET", "كلية الأعمال والإدارة - AUM", "KILAW - كلية القانون الكويتية العالمية"] },
+  R: { code: "R", title: "العملي التقني", emoji: "🔧", desc: "تميل نحو الأعمال العملية والتقنية. تفضل العمل بيديك وتجد متعة في حل المشكلات الهندسية والتقنية الملموسة. البيئة المثالية لك هي الورش والمختبرات والمواقع الهندسية.", recs: ["كلية الهندسة والبترول - جامعة الكويت", "كلية الدراسات التكنولوجية - PAAET", "كلية الهندسة والتكنولوجيا - AUM", "كلية الهندسة والتكنولوجيا - ACK"],
+    collegeRefs: [{ instId: "ku", name: "كلية الهندسة والبترول" }, { instId: "paaet", name: "كلية الدراسات التكنولوجية" }, { instId: "aum", name: "كلية الهندسة والتكنولوجيا" }, { instId: "ack", name: "كلية الهندسة والتكنولوجيا" }] },
+  I: { code: "I", title: "الباحث المحلل", emoji: "🔬", desc: "تتميز بالتفكير التحليلي والفضول العلمي. تحب البحث والتجريب وتسعى دائماً لفهم الأشياء بعمق. تنجذب للمسائل المعقدة التي تحتاج تفكيراً نقدياً.", recs: ["كلية العلوم - جامعة الكويت", "كلية الطب - جامعة الكويت", "كلية الصيدلة - جامعة الكويت", "كلية العلوم الحياتية - KU"],
+    collegeRefs: [{ instId: "ku", name: "كلية العلوم" }, { instId: "ku", name: "كلية الطب" }, { instId: "ku", name: "كلية الصيدلة" }, { instId: "ku", name: "كلية العلوم الحياتية" }] },
+  A: { code: "A", title: "المبدع الفني", emoji: "🎨", desc: "تمتلك روحاً إبداعية وتعبيرية. تنجذب نحو الفن والتصميم والأدب والإعلام. تزدهر في البيئات المرنة التي تتيح لك التعبير الحر والابتكار.", recs: ["كلية العمارة - جامعة الكويت", "كلية الآداب - جامعة الكويت", "كلية الفنون والعلوم الإنسانية - AUK", "كلية الفنون والعلوم - GUST"],
+    collegeRefs: [{ instId: "ku", name: "كلية العمارة" }, { instId: "ku", name: "كلية الآداب" }, { instId: "auk", name: "كلية الفنون والعلوم الإنسانية" }, { instId: "gust", name: "كلية الفنون والعلوم" }] },
+  S: { code: "S", title: "الاجتماعي المساعد", emoji: "🤝", desc: "لديك دافع قوي لمساعدة الآخرين والتأثير فيهم إيجاباً. بيئتك المثالية هي العمل مع الناس في مجالات التعليم والصحة والخدمة الاجتماعية.", recs: ["كلية التربية - جامعة الكويت", "كلية العلوم الاجتماعية - KU", "كلية التمريض - PAAET", "كلية التربية الأساسية - PAAET"],
+    collegeRefs: [{ instId: "ku", name: "كلية التربية" }, { instId: "ku", name: "كلية العلوم الاجتماعية" }, { instId: "paaet", name: "كلية التمريض" }, { instId: "paaet", name: "كلية التربية الأساسية" }] },
+  E: { code: "E", title: "القائد الريادي", emoji: "📊", desc: "تمتلك قدرات قيادية وإقناعية قوية. تنجذب نحو الأعمال وريادة المشاريع وتحب التأثير في الآخرين وتحقيق الأهداف التجارية.", recs: ["كلية العلوم الإدارية - جامعة الكويت", "كلية الأعمال والاقتصاد - AUK", "كلية الأعمال والإدارة - GUST", "كلية الحقوق - جامعة الكويت"],
+    collegeRefs: [{ instId: "ku", name: "كلية العلوم الإدارية" }, { instId: "auk", name: "كلية الأعمال والاقتصاد" }, { instId: "gust", name: "كلية الأعمال والإدارة" }, { instId: "ku", name: "كلية الحقوق" }] },
+  C: { code: "C", title: "المنظم الدقيق", emoji: "📋", desc: "تتميز بالدقة والتنظيم والانتباه للتفاصيل. تنجح في البيئات المنظمة وتجيد العمل مع الأرقام والبيانات والأنظمة والإجراءات الواضحة.", recs: ["المحاسبة / نظم المعلومات - كلية العلوم الإدارية KU", "كلية الدراسات التجارية - PAAET", "كلية الأعمال والإدارة - AUM", "KILAW - كلية القانون الكويتية العالمية"],
+    collegeRefs: [{ instId: "ku", name: "كلية العلوم الإدارية" }, { instId: "paaet", name: "كلية الدراسات التجارية" }, { instId: "aum", name: "كلية الأعمال والإدارة" }, { instId: "kilaw", name: "أقسام القانون" }] },
 };
 
 // ─── GPA DATA ────────────────────────────────────────────────────────────────
@@ -622,7 +628,8 @@ function AptitudeScreen({ w = 480 }) {
     }
   };
 
-  const reset = () => { setStep("intro"); setAnswers({}); setCurrent(0); setResult(null); };
+  const [expanded, setExpanded] = useState({});
+  const reset = () => { setStep("intro"); setAnswers({}); setCurrent(0); setResult(null); setExpanded({}); };
 
   if (step === "intro") return (
     <div style={{ padding: `16px ${px}px ${isDesktop ? 40 : 80}px` }}>
@@ -689,40 +696,63 @@ function AptitudeScreen({ w = 480 }) {
     );
   }
 
-  if (step === "result" && result) return (
-    <div style={{ padding: `16px ${px}px ${isDesktop ? 40 : 80}px` }}>
-      <div style={{ textAlign: "center", padding: "32px 20px", background: `linear-gradient(135deg, ${COLORS.navy}, #2a5298)`, borderRadius: 16, marginBottom: 16, color: "white" }}>
-        <div style={{ fontSize: 56, marginBottom: 12 }}>{result.emoji}</div>
-        {/* Holland Code badge */}
-        <div style={{ display: "inline-flex", gap: 6, marginBottom: 14 }}>
-          {result.hollandCode.split("").map((letter, i) => (
-            <div key={letter} style={{ width: 36, height: 36, borderRadius: 8, background: i === 0 ? COLORS.gold : "rgba(255,255,255,.2)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 16, color: i === 0 ? COLORS.navy : "rgba(255,255,255,.8)" }}>
-              {letter}
-            </div>
+  if (step === "result" && result) {
+    const resolvedColleges = (result.collegeRefs || []).map(ref => {
+      const inst = INSTITUTIONS.find(i => i.id === ref.instId);
+      const col  = inst?.colleges.find(c => c.name === ref.name);
+      return col ? { ...col, instName: inst.name } : null;
+    }).filter(Boolean);
+
+    return (
+      <div style={{ padding: `16px ${px}px ${isDesktop ? 40 : 80}px` }}>
+        <div style={{ textAlign: "center", padding: "32px 20px", background: `linear-gradient(135deg, ${COLORS.navy}, #2a5298)`, borderRadius: 16, marginBottom: 16, color: "white" }}>
+          <div style={{ fontSize: 56, marginBottom: 12 }}>{result.emoji}</div>
+          <div style={{ display: "inline-flex", gap: 6, marginBottom: 14 }}>
+            {result.hollandCode.split("").map((letter, i) => (
+              <div key={letter} style={{ width: 36, height: 36, borderRadius: 8, background: i === 0 ? COLORS.gold : "rgba(255,255,255,.2)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 16, color: i === 0 ? COLORS.navy : "rgba(255,255,255,.8)" }}>
+                {letter}
+              </div>
+            ))}
+          </div>
+          <div style={{ fontSize: 12, color: "rgba(255,255,255,.6)", marginBottom: 4 }}>Holland Code · RIASEC</div>
+          <div style={{ fontSize: 13, color: "rgba(255,255,255,.75)", marginBottom: 8 }}>شخصيتك المهنية</div>
+          <div style={{ fontSize: 22, fontWeight: 700, color: COLORS.gold }}>{result.title}</div>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,.5)", marginTop: 4 }}>{RIASEC_LABELS[result.code]}</div>
+        </div>
+
+        <Card style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 13, color: "#333", lineHeight: 1.9 }}>{result.desc}</div>
+        </Card>
+
+        <div style={{ fontSize: 14, fontWeight: 700, color: "#111", marginBottom: 10 }}>الكليات والتخصصات المقترحة لك:</div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
+          {resolvedColleges.map((col, i) => (
+            <Card key={i} style={{ cursor: col.majors?.length ? "pointer" : "default" }} onClick={() => col.majors?.length && setExpanded(e => ({ ...e, [i]: !e[i] }))}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ width: 28, height: 28, background: COLORS.navyLight, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: COLORS.navy, flexShrink: 0 }}>{i + 1}</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: "#111" }}>{col.name}</div>
+                  <div style={{ fontSize: 11, color: COLORS.gray, marginTop: 1 }}>{col.instName}</div>
+                </div>
+                {col.majors?.length > 0 && (
+                  <span style={{ fontSize: 12, color: COLORS.gray, flexShrink: 0, transform: expanded[i] ? "rotate(180deg)" : "none", transition: "transform .15s" }}>▾</span>
+                )}
+              </div>
+              {expanded[i] && col.majors?.length > 0 && (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 10, paddingTop: 10, borderTop: "1px solid #e5e7eb" }}>
+                  {col.majors.map((m, j) => (
+                    <span key={j} style={{ fontSize: 11, background: COLORS.navyLight, color: COLORS.navy, padding: "3px 10px", borderRadius: 20 }}>{m}</span>
+                  ))}
+                </div>
+              )}
+            </Card>
           ))}
         </div>
-        <div style={{ fontSize: 12, color: "rgba(255,255,255,.6)", marginBottom: 4 }}>Holland Code · RIASEC</div>
-        <div style={{ fontSize: 13, color: "rgba(255,255,255,.75)", marginBottom: 8 }}>شخصيتك المهنية</div>
-        <div style={{ fontSize: 22, fontWeight: 700, color: COLORS.gold }}>{result.title}</div>
-        <div style={{ fontSize: 11, color: "rgba(255,255,255,.5)", marginTop: 4 }}>{RIASEC_LABELS[result.code]}</div>
+
+        <button onClick={reset} style={{ width: "100%", background: "white", border: `1px solid ${COLORS.navy}`, color: COLORS.navy, borderRadius: 12, padding: "12px", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>إعادة الاختبار</button>
       </div>
-      <Card style={{ marginBottom: 14 }}>
-        <div style={{ fontSize: 13, color: "#333", lineHeight: 1.9 }}>{result.desc}</div>
-      </Card>
-      <div style={{ fontSize: 14, fontWeight: 600, color: "#111", marginBottom: 10 }}>التخصصات المقترحة لك:</div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 20 }}>
-        {result.recs.map((r, i) => (
-          <Card key={i} style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ width: 28, height: 28, background: COLORS.navyLight, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: COLORS.navy, flexShrink: 0 }}>{i + 1}</div>
-            <span style={{ fontSize: 13, color: "#111" }}>{r}</span>
-          </Card>
-        ))}
-      </div>
-      <div style={{ display: "flex", gap: 10 }}>
-        <button onClick={reset} style={{ flex: 1, background: "white", border: `1px solid ${COLORS.navy}`, color: COLORS.navy, borderRadius: 12, padding: "12px", fontSize: 13, cursor: "pointer", fontFamily: "inherit", fontWeight: 500 }}>إعادة الاختبار</button>
-      </div>
-    </div>
-  );
+    );
+  }
   return null;
 }
 
