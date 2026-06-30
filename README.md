@@ -1,16 +1,74 @@
-# React + Vite
+# مسار — Masaar
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Kuwait university guidance app for high school graduates. Helps students discover the right college path based on their GPA, aptitude, and interests.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- **GPA Calculator** — Enter grades manually by stream (Science / Arts) or upload your high school certificate and enter your overall score. Shows qualifying colleges with expandable majors.
+- **Aptitude Test** — 20-question RIASEC Holland Code personality test. Results show matched colleges with expandable majors.
+- **College Explorer** — Browse all Kuwait universities and colleges with admission requirements, minimum scores, and English test requirements.
+- **Deadlines** — Upcoming admission and scholarship deadlines.
+- **Scholarships** — Overview of international scholarship destinations.
+- **Auth** — Email/password sign-up and login via Supabase Auth. Certificate upload stored in Supabase Storage (private, per-user).
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+| Layer | Technology |
+|---|---|
+| Frontend | React 19 + Vite 8 |
+| Auth & Storage | Supabase |
+| Styling | Inline styles (no CSS framework) |
+| Language | Arabic (RTL) |
+| Hosting | Vercel |
 
-## Expanding the Oxlint configuration
+## Getting Started
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+```bash
+npm install
+npm run dev
+```
+
+### Environment Variables
+
+Create `.env.local` in the project root:
+
+```env
+VITE_SUPABASE_URL=your_supabase_project_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+### Supabase Setup
+
+1. Create a **private** storage bucket named `certificates`
+2. Add RLS policies scoped to each user's folder:
+   - Condition: `(storage.foldername(name))[1] = auth.uid()::text`
+   - Apply to: INSERT, SELECT, UPDATE, DELETE
+
+## Project Structure
+
+```
+kharrij/
+├── src/
+│   ├── App.jsx        # All screens and data
+│   └── supabase.js    # Supabase client + normalizeUser helper
+├── .env.local         # Not committed — add your own
+├── vite.config.js
+└── package.json
+```
+
+## Data
+
+All college and admission data lives in `App.jsx`:
+
+- `INSTITUTIONS` — 8 Kuwait universities with colleges, majors, and admission conditions
+- `APTITUDE_QUESTIONS` — 20 RIASEC questions
+- `APTITUDE_RESULTS` — Holland Code profiles with college recommendations
+- `SUBJECTS` — Subjects per stream (Science / Arts)
+- `DATES` — Upcoming admission deadlines
+- `SCHOLARSHIPS` — International scholarship info
+
+## Build
+
+```bash
+npm run build   # output → dist/
+```
